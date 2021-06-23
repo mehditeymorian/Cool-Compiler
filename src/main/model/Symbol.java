@@ -2,9 +2,9 @@ package main.model;
 
 public class Symbol {
     private String value;
-    private SymbolType type;
+    private String type;
 
-    public Symbol(String value , SymbolType type) {
+    public Symbol(String value , String type) {
         this.value = value;
         this.type = type;
     }
@@ -14,7 +14,7 @@ public class Symbol {
         return value;
     }
 
-    public SymbolType getType() {
+    public String getType() {
         return type;
     }
 }

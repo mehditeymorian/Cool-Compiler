@@ -36,7 +36,7 @@ public class TokenList implements Lexical {
     public String nextToken() {
         currentSymbol = index < symbols.size() ? symbols.get(index) : null;
         index++;
-        return currentSymbol != null ? currentSymbol.getType().name().toLowerCase() : "$";
+        return currentSymbol != null ? currentSymbol.getType() : "$";
     }
 
     public Symbol getCurrentSymbol() {

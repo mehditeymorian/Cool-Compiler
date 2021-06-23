@@ -113,12 +113,12 @@ public class CoolBaseListener implements CoolListener {
 	}
 
 	@Override
-	public void enterIdentifier(CoolParser.IdentifierContext ctx) {
+	public void enterId(CoolParser.IdContext ctx) {
 
 	}
 
 	@Override
-	public void exitIdentifier(CoolParser.IdentifierContext ctx) {
+	public void exitId(CoolParser.IdContext ctx) {
 
 	}
 
@@ -144,16 +144,45 @@ public class CoolBaseListener implements CoolListener {
 
 	@Override
 	public void visitTerminal(TerminalNode terminalNode) {
-		SymbolType type = SymbolType.values()[terminalNode.getSymbol().getType()];
+		String text = terminalNode.getText();
+		int typeCode = terminalNode.getSymbol().getType();
+		SymbolType type = SymbolType.values()[typeCode];
 		switch (type) {
+			case NEWLINE:
 			case WHITESPACE:
 			case ONELINECOMMENT:
 			case MULTICOMMENT:
 				break;
 			case UNKNOWN:
-				throw new IllegalArgumentException("cannot compile");
+				throw new IllegalArgumentException("cannot compile: unknown token: (" + text + ")");
+			case CODE:
+				if (text.equals("."))
+					symbols.add(new Symbol(text , "dot"));
+				else if (text.equals(","))
+					symbols.add(new Symbol(text , "comma"));
+				else
+					symbols.add(new Symbol(text , text));
+				break;
+			case KEYWORD:
+				symbols.add(new Symbol(text , text));
+				break;
+			case INT:
+				symbols.add(new Symbol(text , "icv"));
+				break;
+			case HEX:
+				symbols.add(new Symbol(text , "real_literal"));
+				break;
+			case SCIENTIFIC:
+				symbols.add(new Symbol(text , "real_literal"));
+				break;
+			case FLOAT:
+				symbols.add(new Symbol(text , "double_literal"));
+				break;
+			case STRING:
+				symbols.add(new Symbol(text.substring(1 , text.length() - 1) , "string_literal"));
+				break;
 			default:
-				symbols.add(new Symbol(terminalNode.getText() , type));
+				symbols.add(new Symbol(text , type.name().toLowerCase()));
 		}
 	}
 

@@ -1,4 +1,5 @@
-package main.scanner;// Generated from H:/Projects/Java/ScannerAntlr/src\Cool.g4 by ANTLR 4.9.1
+// Generated from H:/Projects/Java/CoolCompiler/src/main/scanner\Cool.g4 by ANTLR 4.9.1
+package main.scanner;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -97,15 +98,15 @@ public interface CoolListener extends ParseTreeListener {
 	 */
 	void exitOperatorPunctuation(CoolParser.OperatorPunctuationContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link CoolParser#identifier}.
+	 * Enter a parse tree produced by {@link CoolParser#id}.
 	 * @param ctx the parse tree
 	 */
-	void enterIdentifier(CoolParser.IdentifierContext ctx);
+	void enterId(CoolParser.IdContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link CoolParser#identifier}.
+	 * Exit a parse tree produced by {@link CoolParser#id}.
 	 * @param ctx the parse tree
 	 */
-	void exitIdentifier(CoolParser.IdentifierContext ctx);
+	void exitId(CoolParser.IdContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link CoolParser#comment}.
 	 * @param ctx the parse tree

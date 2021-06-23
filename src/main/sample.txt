@@ -1,2 +1,53 @@
-a + 2
-c * d
+class Sort {
+
+    bubbleSort (items: int[]): int[] {
+        let i: int;
+        let j: int;
+        let n: int;
+        n <- len(items);
+
+        for(i <- 0; i < n - 1; i <- i+1)
+            for (j <- 0; j < n-i-1; j <- j+1)
+                if items[j] > items[j+1] then
+                    let t: int;
+                    t <- items[j];
+                    items[j] <- items[j+1];
+                    items[j+1] <- t;
+                fi
+            rof
+        rof
+        return items;
+    }
+}
+
+class Main {
+    let items: int[];
+
+    printArray(): void {
+        let i: int;
+        out_string("sorted list:");
+        for (i <- 0; i < 100; i++)
+            out_string(items[i]);
+        rof
+    }
+
+    main() : int {
+        let i: int;
+        let j: int;
+        let rawItems: int[];
+        rawItems <- new Array(int, 100);
+        for(i <- 0; i < 100; i <- i+1)
+            let x: int;
+            x <- in_int();
+            if x == -1 then
+                break;
+            else
+                rawItems[i] <- x;
+            fi
+        rof
+        let s: Sort;
+        items <- s.bubbleSort(rawItems);
+        printArray();
+        return 0;
+    }
+}

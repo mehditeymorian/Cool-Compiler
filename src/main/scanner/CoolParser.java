@@ -1,12 +1,13 @@
-package main.scanner;// Generated from H:/Projects/Java/ScannerAntlr/src\Cool.g4 by ANTLR 4.9.1
-
-import org.antlr.v4.runtime.*;
+// Generated from H:/Projects/Java/CoolCompiler/src/main/scanner\Cool.g4 by ANTLR 4.9.1
+package main.scanner;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.*;
 import org.antlr.v4.runtime.tree.*;
-
 import java.util.List;
+import java.util.Iterator;
+import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class CoolParser extends Parser {
@@ -22,11 +23,11 @@ public class CoolParser extends Parser {
 	public static final int
 		RULE_cool = 0, RULE_line = 1, RULE_newline = 2, RULE_special = 3, RULE_space = 4, 
 		RULE_reserved = 5, RULE_number = 6, RULE_string = 7, RULE_operatorPunctuation = 8, 
-		RULE_identifier = 9, RULE_comment = 10, RULE_unknown = 11;
+		RULE_id = 9, RULE_comment = 10, RULE_unknown = 11;
 	private static String[] makeRuleNames() {
 		return new String[] {
 			"cool", "line", "newline", "special", "space", "reserved", "number", 
-			"string", "operatorPunctuation", "identifier", "comment", "unknown"
+			"string", "operatorPunctuation", "id", "comment", "unknown"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
@@ -108,11 +109,11 @@ public class CoolParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_cool; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).enterCool(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).enterCool(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).exitCool(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).exitCool(this);
 		}
 	}
 
@@ -222,11 +223,11 @@ public class CoolParser extends Parser {
 		public OperatorPunctuationContext operatorPunctuation(int i) {
 			return getRuleContext(OperatorPunctuationContext.class,i);
 		}
-		public List<IdentifierContext> identifier() {
-			return getRuleContexts(IdentifierContext.class);
+		public List<IdContext> id() {
+			return getRuleContexts(IdContext.class);
 		}
-		public IdentifierContext identifier(int i) {
-			return getRuleContext(IdentifierContext.class,i);
+		public IdContext id(int i) {
+			return getRuleContext(IdContext.class,i);
 		}
 		public List<CommentContext> comment() {
 			return getRuleContexts(CommentContext.class);
@@ -246,11 +247,11 @@ public class CoolParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_line; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).enterLine(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).enterLine(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).exitLine(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).exitLine(this);
 		}
 	}
 
@@ -264,7 +265,7 @@ public class CoolParser extends Parser {
 			setState(44);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,3,_ctx);
-			while ( _alt!=1 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
+			while ( _alt!=1 && _alt!= ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1+1 ) {
 					{
 					setState(42);
@@ -318,7 +319,7 @@ public class CoolParser extends Parser {
 					case ID:
 						{
 						setState(39);
-						identifier();
+						id();
 						}
 						break;
 					case ONELINECOMMENT:
@@ -366,11 +367,11 @@ public class CoolParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_newline; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).enterNewline(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).enterNewline(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).exitNewline(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).exitNewline(this);
 		}
 	}
 
@@ -403,11 +404,11 @@ public class CoolParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_special; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).enterSpecial(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).enterSpecial(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).exitSpecial(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).exitSpecial(this);
 		}
 	}
 
@@ -440,11 +441,11 @@ public class CoolParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_space; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).enterSpace(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).enterSpace(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).exitSpace(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).exitSpace(this);
 		}
 	}
 
@@ -477,11 +478,11 @@ public class CoolParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_reserved; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).enterReserved(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).enterReserved(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).exitReserved(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).exitReserved(this);
 		}
 	}
 
@@ -517,11 +518,11 @@ public class CoolParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_number; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).enterNumber(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).enterNumber(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).exitNumber(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).exitNumber(this);
 		}
 	}
 
@@ -563,11 +564,11 @@ public class CoolParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_string; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).enterString(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).enterString(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).exitString(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).exitString(this);
 		}
 	}
 
@@ -600,11 +601,11 @@ public class CoolParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_operatorPunctuation; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).enterOperatorPunctuation(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).enterOperatorPunctuation(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).exitOperatorPunctuation(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).exitOperatorPunctuation(this);
 		}
 	}
 
@@ -629,25 +630,25 @@ public class CoolParser extends Parser {
 		return _localctx;
 	}
 
-	public static class IdentifierContext extends ParserRuleContext {
+	public static class IdContext extends ParserRuleContext {
 		public TerminalNode ID() { return getToken(CoolParser.ID, 0); }
-		public IdentifierContext(ParserRuleContext parent, int invokingState) {
+		public IdContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_identifier; }
+		@Override public int getRuleIndex() { return RULE_id; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).enterIdentifier(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).enterId(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).exitIdentifier(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).exitId(this);
 		}
 	}
 
-	public final IdentifierContext identifier() throws RecognitionException {
-		IdentifierContext _localctx = new IdentifierContext(_ctx, getState());
-		enterRule(_localctx, 18, RULE_identifier);
+	public final IdContext id() throws RecognitionException {
+		IdContext _localctx = new IdContext(_ctx, getState());
+		enterRule(_localctx, 18, RULE_id);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
@@ -675,11 +676,11 @@ public class CoolParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_comment; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).enterComment(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).enterComment(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).exitComment(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).exitComment(this);
 		}
 	}
 
@@ -724,11 +725,11 @@ public class CoolParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_unknown; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).enterUnknown(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).enterUnknown(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CoolListener) ((CoolListener)listener).exitUnknown(this);
+			if ( listener instanceof CoolListener ) ((CoolListener)listener).exitUnknown(this);
 		}
 	}
 
@@ -758,7 +759,7 @@ public class CoolParser extends Parser {
 				setState(70); 
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,4,_ctx);
-			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
+			} while ( _alt!=2 && _alt!= ATN.INVALID_ALT_NUMBER );
 			}
 		}
 		catch (RecognitionException re) {

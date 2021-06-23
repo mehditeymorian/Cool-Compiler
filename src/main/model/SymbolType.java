@@ -1,8 +1,23 @@
 package main.model;
 
+
 public enum SymbolType {
     NOTHING,
+    KEYWORD,
+    INT,
+    HEX,
+    FLOAT,
+    SCIENTIFIC,
+    CODE,
     ID,
+    STRING,
+    ONELINECOMMENT,
+    MULTICOMMENT,
+    SPECIAL,
+    NEWLINE,
+    WHITESPACE,
+    UNKNOWN,
+
     LEFT_PARENTHESES,
     RIGHT_PARENTHESES,
     COMMA,
@@ -50,8 +65,6 @@ public enum SymbolType {
     OUT_STRING,
     NEW,
     LEN,
-    STRING,
-    INT,
     REAL,
     BOOL,
     VOID,
