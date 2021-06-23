@@ -28,7 +28,7 @@ KEYWORD: 'void' | 'for' | 'rof' | 'out_' | 'in_int()' | 'int' | 'while' | 'let' 
 	|	 'real' | 'if' | 'fi' | 'break' | 'then' | 'bool' | 'else' | 'Array' | 'continue' | 'len' | 'string'
 	|	 'return' | 'loop' | 'class' | 'in_string()' | 'pool';
 
-INT: SIGN NUMBER;
+INT: NUMBER;
 
 fragment NUMBER: [0-9]+;
 
