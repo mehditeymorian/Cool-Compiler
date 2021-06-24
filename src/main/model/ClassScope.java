@@ -4,20 +4,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClassScope extends Scope{
-    private List<FunctionScope> children;
+    private List<FunctionScope> functions;
 
 
     public ClassScope(Scope parent , String name) {
         super(parent , name);
-        children = new ArrayList<>();
+        functions = new ArrayList<>();
     }
 
-    public void addChild(FunctionScope child) {
-        children.add(child);
+    public boolean hasFunction(FunctionScope functionScope) {
+        for (FunctionScope each : functions) {
+            if (each.getName().equals(functionScope.getName()))
+                return true;
+        }
+
+        return false;
     }
 
-    public List<FunctionScope> getChildren() {
-        return children;
+    public void addFunction(FunctionScope child) {
+        functions.add(child);
+    }
+
+    public List<FunctionScope> getFunctions() {
+        return functions;
     }
 
 }

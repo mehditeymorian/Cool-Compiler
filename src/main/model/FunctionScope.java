@@ -5,6 +5,7 @@ import java.util.List;
 
 public class FunctionScope extends Scope{
     private String returnType;
+    private boolean isReturnArray;
     private List<Variable> params;
 
     public FunctionScope(Scope parent , String name , String returnType) {
@@ -27,5 +28,21 @@ public class FunctionScope extends Scope{
 
     public List<Variable> getParams() {
         return params;
+    }
+
+    public void setReturnType(String returnType) {
+        this.returnType = returnType;
+    }
+
+    public boolean isReturnArray() {
+        return isReturnArray;
+    }
+
+    public void setReturnArray(boolean returnArray) {
+        isReturnArray = returnArray;
+    }
+
+    public void setParams(List<Variable> params) {
+        this.params = params;
     }
 }

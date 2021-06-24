@@ -32,7 +32,10 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         Symbol currentSymbol = tokenList.getCurrentSymbol();
         set.add(sem);
         switch (sem) {
-            case "sub ":
+            case "end_scope":
+                scopeStack.pop();
+                break;
+            case "sub":
                 break;
             case "create_symbolTable":
                 String className = idStack.pop();
@@ -47,11 +50,16 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 FunctionScope functionScope = new FunctionScope(getCurrentScope() , functionName , functionType);
                 functionScope.addParam(tempParams);
                 tempParams.clear();
-                ((ClassScope) functionScope.getParent()).addChild(functionScope);
+                functionScope.setReturnArray(arrayType);
+                ClassScope parent = (ClassScope) functionScope.getParent();
+                if (parent.hasFunction(functionScope))
+                    throw new IllegalArgumentException(String.format("cannot define %s function twice!\n" , functionName));
+
+                parent.addFunction(functionScope);
                 scopeStack.push(functionScope);
+                arrayType = false;
                 break;
             case "end_function":
-                scopeStack.pop();
                 break;
             case "push_id":
                 idStack.push(currentSymbol.getValue());
@@ -104,6 +112,16 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "cjz":
                 break;
             case "add_symbol":
+                String varName = idStack.pop();
+                String varType = typeStack.pop();
+                Variable variable = new Variable();
+                variable.setName(varName);
+                variable.setType(varType);
+                variable.setArray(arrayType);
+                arrayType = false;
+                if (getCurrentScope().hasVariable(variable))
+                    throw new IllegalArgumentException(String.format("Variable %s cannot be defined twice!\n" , variable.getName()));
+                getCurrentScope().addVariable(variable);
                 break;
             case "jb":
                 break;
