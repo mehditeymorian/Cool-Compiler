@@ -1,5 +1,6 @@
 package main.parser;
 
+import main.parser.Lexical;
 
 import java.io.*;
 import java.nio.file.Files;

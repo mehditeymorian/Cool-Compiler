@@ -1,12 +1,21 @@
 package main.model;
 
 public class Variable {
+    private int number;
     private String name;
     private String value;
     private String type;
     private boolean isArray;
 
     public Variable() {
+    }
+
+    public int getNumber() {
+        return number;
+    }
+
+    public void setNumber(int number) {
+        this.number = number;
     }
 
     public String getName() {

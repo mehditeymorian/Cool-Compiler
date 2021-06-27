@@ -146,6 +146,8 @@ public class CoolBaseListener implements CoolListener {
 	public void visitTerminal(TerminalNode terminalNode) {
 		String text = terminalNode.getText();
 		int typeCode = terminalNode.getSymbol().getType();
+		int line = terminalNode.getSymbol().getLine();
+		int positionInLine =terminalNode.getSymbol().getCharPositionInLine();
 		SymbolType type = SymbolType.values()[typeCode];
 		switch (type) {
 			case NEWLINE:
@@ -157,32 +159,32 @@ public class CoolBaseListener implements CoolListener {
 				throw new IllegalArgumentException("cannot compile: unknown token: (" + text + ")");
 			case CODE:
 				if (text.equals("."))
-					symbols.add(new Symbol(text , "dot"));
+					symbols.add(new Symbol(text , "dot",line,positionInLine));
 				else if (text.equals(","))
-					symbols.add(new Symbol(text , "comma"));
+					symbols.add(new Symbol(text , "comma",line,positionInLine));
 				else
-					symbols.add(new Symbol(text , text));
+					symbols.add(new Symbol(text , text,line,positionInLine));
 				break;
 			case KEYWORD:
-				symbols.add(new Symbol(text , text));
+				symbols.add(new Symbol(text , text,line,positionInLine));
 				break;
 			case INT:
-				symbols.add(new Symbol(text , "icv"));
+				symbols.add(new Symbol(text , "icv",line,positionInLine));
 				break;
 			case HEX:
-				symbols.add(new Symbol(text , "real_literal"));
+				symbols.add(new Symbol(text , "real_literal",line,positionInLine));
 				break;
 			case SCIENTIFIC:
-				symbols.add(new Symbol(text , "real_literal"));
+				symbols.add(new Symbol(text , "real_literal",line,positionInLine));
 				break;
 			case FLOAT:
-				symbols.add(new Symbol(text , "double_literal"));
+				symbols.add(new Symbol(text , "double_literal",line,positionInLine));
 				break;
 			case STRING:
-				symbols.add(new Symbol(text.substring(1 , text.length() - 1) , "string_literal"));
+				symbols.add(new Symbol(text.substring(1 , text.length() - 1) , "string_literal",line,positionInLine));
 				break;
 			default:
-				symbols.add(new Symbol(text , type.name().toLowerCase()));
+				symbols.add(new Symbol(text , type.name().toLowerCase(),line,positionInLine));
 		}
 	}
 
