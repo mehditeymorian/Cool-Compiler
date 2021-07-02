@@ -1,63 +1,104 @@
 package main.codegen;
 
 import main.TokenList;
+import main.codegen.assembly.generator.Assignment;
+import main.codegen.assembly.generator.Expression;
+import main.codegen.writer.*;
+import main.codegen.desc.Descriptor;
 import main.model.*;
 
 import java.util.*;
 
+import static main.codegen.Utils.getAdr;
+
 public class CodeGenerator implements main.parser.CodeGenerator {
     private final TokenList tokenList;
-    private final Set<String> set;
-    private final Stack<String> idStack;
+    public static Map<String,Descriptor> variables;
+    public static TreeSet<String> tempVariables;
+    public static Stack<Descriptor> semanticStack;
+    public static Stack<String> labelStack;
     private final Stack<String> typeStack;
-    private final Stack<String> literalStack;
     private final Stack<Scope> scopeStack;
-    private final Stack<ExpressionType> exprTypeStack;
-    private List<Scope> classes;
+    private final List<Scope> classes;
+    // used to process function input params
     private List<Variable> tempParams;
     private boolean arrayType;
     private String assignType = "";
-    public static String[] BOOL_OPERATORS = {"<" , "<=" , ">" , ">=" , "==" , "!="};
-    public static String[] NUMBER_OPERATORS = {"add" , "sub" , "mult" , "div" , "mod","bitwise_xor","bitwise_and","bitwise_or"};
-    public static String[] ASSIGN_OPERATORS = {"minus_assign","plus_assign","id_assign","reference_assign","array_assign"};
-    public static final String UNARY_OPERATOR = "unary_operator";
 
     public CodeGenerator(TokenList tokenList) {
         this.tokenList = tokenList;
-        idStack = new Stack<>();
+        variables = new HashMap<>();
+        semanticStack = new Stack<>();
+        labelStack = new Stack<>();
         typeStack = new Stack<>();
-        literalStack = new Stack<>();
         scopeStack = new Stack<>();
-        exprTypeStack = new Stack<>();
-        set = new HashSet<>();
+        tempVariables = new TreeSet<>();
         classes = new ArrayList<>();
         tempParams = new ArrayList<>();
+        initTempVariables();
+    }
+
+    private void initTempVariables() {
+        for (int i = 0; i < 10; i++) {
+            tempVariables.add("$t" + i);
+        }
     }
 
     @Override
     public void doSemantic(String sem) {
         Symbol currentSymbol = tokenList.getCurrentSymbol();
-        set.add(sem);
         switch (sem) {
             case "end_scope":
                 scopeStack.pop();
                 break;
-            case "create_symbolTable":
+            case "create_class":
                 createClass();
                 break;
             case "create_function":
                 createFunction();
                 break;
             case "end_function":
+                System.out.println("end function");
                 break;
             case "push_id":
-                idStack.push(currentSymbol.getValue());
+                semanticStack.push(new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.VARIABLE));
                 break;
             case "push_type":
                 typeStack.push(currentSymbol.getValue());
                 break;
-            case "push_lit":
-                literalStack.push(currentSymbol.getValue());
+            case "push_func_type":
+                typeStack.push(currentSymbol.getValue());
+                break;
+            case "push_cast_type":
+                typeStack.push(currentSymbol.getValue());
+                break;
+            case "push_array_type":
+                typeStack.push(currentSymbol.getValue());
+                break;
+            case "push_string":
+                Descriptor stringLiteral = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.LITERAL);
+                stringLiteral.setDataType(DataType.STRING);
+                semanticStack.push(stringLiteral);
+                break;
+            case "push_real":
+                Descriptor realLiteral = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.LITERAL);
+                realLiteral.setDataType(DataType.REAL);
+                semanticStack.push(realLiteral);
+                break;
+            case "push_icv":
+                Descriptor icv = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.LITERAL);
+                icv.setDataType(DataType.INT);
+                semanticStack.push(icv);
+                break;
+            case "push_double":
+                Descriptor doubleLiteral = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.LITERAL);
+                doubleLiteral.setDataType(DataType.DOUBLE);
+                semanticStack.push(doubleLiteral);
+                break;
+            case "push_void":
+                Descriptor voidLiteral = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.LITERAL);
+                voidLiteral.setDataType(DataType.VOID);
+                semanticStack.push(voidLiteral);
                 break;
             case "array_type":
                 arrayType = true;
@@ -66,42 +107,32 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 addFunctionParam();
                 break;
             case "add_symbol":
-                addVariableToScope();
-                break;
-
-
-            case "push_compare":
-                exprTypeStack.push(ExpressionType.of(currentSymbol.getValue(), ExpressionType.Level.EXPRESSION));
-                break;
-            case "add":
-//                exprTypeStack.push(ExpressionType.of(sem, ExpressionType.Level.SUB_EXPRESSION).setBinary(true));
-                break;
-            case "sub":
-//                exprTypeStack.push(ExpressionType.of(sem, ExpressionType.Level.SUB_EXPRESSION).setBinary(true));
-                break;
-            case "neg":
-//                exprTypeStack.push(ExpressionType.of(sem, ExpressionType.Level.SUB_EXPRESSION));
-                break;
-            case "mult":
-//                exprTypeStack.push(ExpressionType.of(sem, ExpressionType.Level.SUB_EXPRESSION).setBinary(true));
-                break;
-            case "div":
-//                exprTypeStack.push(ExpressionType.of(sem, ExpressionType.Level.SUB_EXPRESSION).setBinary(true));
-                break;
-            case "mod":
-//                exprTypeStack.push(ExpressionType.of(sem, ExpressionType.Level.SUB_EXPRESSION).setBinary(true));
+                addSymbolToScope();
                 break;
 
 
             case "bitwise_xor":
-//                exprTypeStack.push(ExpressionType.of(sem, ExpressionType.Level.SUB_EXPRESSION).setBinary(true));
-                break;
             case "bitwise_and":
-//                exprTypeStack.push(ExpressionType.of(sem, ExpressionType.Level.SUB_EXPRESSION).setBinary(true));
-                break;
             case "bitwise_or":
-//                exprTypeStack.push(ExpressionType.of(sem, ExpressionType.Level.SUB_EXPRESSION).setBinary(true));
+            case "bigger_than":
+            case "bigger_equal":
+            case "equal_equal":
+            case "not_equal":
+            case "less_than":
+            case "less_equal":
+            case "add":
+            case "sub":
+            case "mult":
+            case "div":
+            case "mod":
+                Descriptor top = semanticStack.pop();
+                Descriptor bottom = semanticStack.pop();
+                Expression.binary(bottom, top ,sem);
+            case "neg":
                 break;
+
+
+
 
 
             case "call":
@@ -109,16 +140,12 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "print_out":
                 break;
             case "input_int":
-                exprTypeStack.push(ExpressionType.of(UNARY_OPERATOR, ExpressionType.Level.OPERAND));
                 break;
             case "input_string":
-                exprTypeStack.push(ExpressionType.of(UNARY_OPERATOR, ExpressionType.Level.OPERAND));
                 break;
             case "call_len_str":
-                exprTypeStack.push(ExpressionType.of(UNARY_OPERATOR, ExpressionType.Level.OPERAND));
                 break;
             case "call_len_id":
-                exprTypeStack.push(ExpressionType.of(UNARY_OPERATOR, ExpressionType.Level.OPERAND));
                 break;
 
 
@@ -134,31 +161,47 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "reference_assign":
             case "array_assign":
                 assignType = sem;
-                exprTypeStack.push(ExpressionType.of(sem, ExpressionType.Level.OPERAND));
                 break;
-
 
 
             case "cjz":
+                String goLabel = labelStack.pop();
+                AssemblyWriter.label(goLabel);
+                break;
+            case "jp":
+                String jzLabel = labelStack.pop();
+
+                String label2 = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
+                labelStack.push(label2);
+                AssemblyWriter.instruction("b",label2);
+
+                AssemblyWriter.label(jzLabel);
                 break;
             case "cjp":
+                String cjpLabel = labelStack.pop();
+                AssemblyWriter.label(cjpLabel);
                 break;
             case "jb":
                 break;
             case "jz":
+                String label = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
+                labelStack.push(label);
+
+                Descriptor descriptor = semanticStack.pop();
+                String value = getAdr(descriptor);
+                if (descriptor.getType() != Descriptor.Type.LITERAL)
+                    tempVariables.add(value);
+                AssemblyWriter.instruction("jz",value,label);
                 break;
             case "cjb":
                 break;
 
 
             case "plus_plus":
-                exprTypeStack.push(ExpressionType.of(UNARY_OPERATOR, ExpressionType.Level.OPERAND));
                 break;
             case "minus_minus":
-                exprTypeStack.push(ExpressionType.of(UNARY_OPERATOR, ExpressionType.Level.OPERAND));
                 break;
             case "not":
-                exprTypeStack.push(ExpressionType.of(UNARY_OPERATOR, ExpressionType.Level.OPERAND));
                 break;
 
 
@@ -178,24 +221,16 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 break;
 
             case "any_expr":
-                if (!exprTypeStack.isEmpty()) {
-                    ExpressionType pop = exprTypeStack.pop();
-//                    if (!pop.isBinary())
-//                        exprTypeStack.pop();
-                }
 
                 break;
             case "bool_expr":
-                if (!isBoolExpression())
-                    throw new IllegalArgumentException("a boolean expression required");
+
                 break;
             case "int_expr":
-                if (!isNumberExpression())
-                    throw new IllegalArgumentException("a number expression required");
+
                 break;
             case "assign_expr":
-                if (!isAssignExpression())
-                    throw new IllegalArgumentException("a assign expression required");
+
                 break;
 
             default:
@@ -204,12 +239,19 @@ public class CodeGenerator implements main.parser.CodeGenerator {
     }
 
     private void simpleAssignment() {
+        Descriptor right = semanticStack.pop();
         switch (assignType) {
             case "id_assign": // id <- expr.
+                Descriptor leftId = semanticStack.pop();
+                Assignment.idAssign(leftId,right);
                 break;
             case "reference_assign": // id.id <- expr
+                Descriptor idRef = semanticStack.pop();
+                Descriptor idSrc = semanticStack.pop();
                 break;
             case "array_assign": // id[sub expr] <- expr
+                Descriptor left = semanticStack.pop();
+                Descriptor subExpr = semanticStack.pop();
                 break;
         }
     }
@@ -226,7 +268,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
     }
 
     private void createFunction() {
-        String functionName = idStack.pop();
+        String functionName = semanticStack.pop().getValue();
         String functionType = typeStack.pop();
         FunctionScope functionScope = new FunctionScope(getCurrentScope() , functionName , functionType);
         functionScope.addParam(tempParams);
@@ -241,71 +283,58 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         arrayType = false;
     }
 
-    private void addVariableToScope() {
-        String varName = idStack.pop();
+    private void addSymbolToScope() {
         String varType = typeStack.pop();
+
+        Descriptor descriptor = semanticStack.pop();
+        descriptor.setDataType(varType);
+        variables.put(descriptor.fullAddress() , descriptor);
+
         Variable variable = new Variable();
-        variable.setName(varName);
-        variable.setType(varType);
+        variable.setName(descriptor.getValue());
+        variable.setVariableType(varType);
         variable.setArray(arrayType);
         arrayType = false;
+
         if (getCurrentScope().hasVariable(variable))
             throw new IllegalArgumentException(String.format("Variable %s cannot be defined twice!\n" , variable.getName()));
+
+        variable.setLabel(LabelGenerator.variable(descriptor.getPrefix() , descriptor.getValue()));
         getCurrentScope().addVariable(variable);
+        AssemblyWriter.memory(variable.getLabel() , variable.getVariableType());
+
     }
 
     private void addFunctionParam() {
-        String paramName = idStack.pop();
+        String paramName = semanticStack.pop().getValue();
         String paramType = typeStack.pop();
         Variable param = new Variable();
         param.setNumber(tempParams.size());
         param.setName(paramName);
-        param.setType(paramType);
+        param.setVariableType(paramType);
         param.setArray(arrayType);
         arrayType = false;
         tempParams.add(param);
     }
 
     private void createClass() {
-        String className = idStack.pop();
+        String className = semanticStack.pop().getValue();
         Scope scope = new ClassScope(null , className);
         classes.add(scope);
         scopeStack.push(scope);
     }
 
-
-    private boolean isBoolExpression() {
-        ExpressionType pop = exprTypeStack.pop();
-//        for (String boolOperator : BOOL_OPERATORS) {
-//            if (pop.getType().equals(boolOperator))
-//                return true;
-//        }
-        return true;
-    }
-
-    private boolean isNumberExpression() {
-        ExpressionType pop = exprTypeStack.pop();
-//        for (String boolOperator : NUMBER_OPERATORS) {
-//            if (pop.getType().equals(boolOperator))
-//                return true;
-//        }
-        return true;
-    }
-
-    private boolean isAssignExpression() {
-        ExpressionType pop = exprTypeStack.pop();
-//        for (String boolOperator : ASSIGN_OPERATORS) {
-//            if (pop.getType().equals(boolOperator))
-//                return true;
-//        }
-        return true;
-    }
-
-    public Set<String> getSet() {
-        return set;
-    }
-
     public Scope getCurrentScope() {
         return scopeStack.isEmpty() ? null : scopeStack.peek();
+    }
+
+    public String getPrefix() {
+        String className = classes.size() == 0 ? "" : classes.get(classes.size() - 1).getName();
+        Scope currentScope = getCurrentScope();
+        String functionName = currentScope == null ? "" : currentScope.getName();
+
+        if (className.isEmpty() && functionName.isEmpty()) return "";
+
+        return functionName.equals(className) ? className : className + "_" + functionName;
     }
 }

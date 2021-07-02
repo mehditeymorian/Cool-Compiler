@@ -2,12 +2,21 @@ package main.model;
 
 public class Variable {
     private int number;
+    private String label;
     private String name;
     private String value;
-    private String type;
+    private DataType dataType;
     private boolean isArray;
 
     public Variable() {
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public int getNumber() {
@@ -42,11 +51,26 @@ public class Variable {
         this.value = value;
     }
 
-    public String getType() {
-        return type;
+    public DataType getVariableType() {
+        return dataType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setVariableType(String type) {
+        this.dataType = DataType.valueOf(type.toUpperCase());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Variable variable = (Variable) o;
+
+        return label.equals(variable.label);
+    }
+
+    @Override
+    public int hashCode() {
+        return label.hashCode();
     }
 }
