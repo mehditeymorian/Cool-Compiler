@@ -3,6 +3,8 @@ package main.codegen;
 import main.TokenList;
 import main.codegen.assembly.generator.Assignment;
 import main.codegen.assembly.generator.Expression;
+import main.codegen.assembly.generator.SystemCall;
+import main.codegen.desc.MinusPlus;
 import main.codegen.writer.*;
 import main.codegen.desc.Descriptor;
 import main.model.*;
@@ -14,6 +16,7 @@ import static main.codegen.Utils.getAdr;
 public class CodeGenerator implements main.parser.CodeGenerator {
     private final TokenList tokenList;
     public static Map<String,Descriptor> variables;
+    public static Stack<MinusPlus> minusPlusStack;
     public static TreeSet<String> tempVariables;
     public static Stack<Descriptor> semanticStack;
     public static Stack<String> labelStack;
@@ -29,6 +32,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         this.tokenList = tokenList;
         variables = new HashMap<>();
         semanticStack = new Stack<>();
+        minusPlusStack = new Stack<>();
         labelStack = new Stack<>();
         typeStack = new Stack<>();
         scopeStack = new Stack<>();
@@ -61,7 +65,10 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 System.out.println("end function");
                 break;
             case "push_id":
-                semanticStack.push(new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.VARIABLE));
+                Descriptor item = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.VARIABLE);
+                semanticStack.push(item);
+                if (!minusPlusStack.isEmpty())
+                    minusPlusStack.peek().setDescriptor(item);
                 break;
             case "push_type":
                 typeStack.push(currentSymbol.getValue());
@@ -129,6 +136,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 Descriptor bottom = semanticStack.pop();
                 Expression.binary(bottom, top ,sem);
             case "neg":
+                Expression.unary(semanticStack.pop(),"neg");
                 break;
 
 
@@ -140,12 +148,16 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "print_out":
                 break;
             case "input_int":
+                SystemCall.inputInt();
                 break;
             case "input_string":
+                SystemCall.inputString();
                 break;
             case "call_len_str":
+                SystemCall.lenStr();
                 break;
             case "call_len_id":
+                SystemCall.lenId();
                 break;
 
 
@@ -197,10 +209,17 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 break;
 
 
-            case "plus_plus":
+            case "pre_plus_plus":
+                minusPlusStack.push(new MinusPlus(null,-1));
                 break;
-            case "minus_minus":
+            case "pre_minus_minus":
+                minusPlusStack.push(new MinusPlus(null,-2));
                 break;
+            case "post_plus_plus":
+                minusPlusStack.push(new MinusPlus(semanticStack.peek(),1));
+                break;
+            case "post_minus_minus":
+                minusPlusStack.push(new MinusPlus(semanticStack.peek(),2));                break;
             case "not":
                 break;
 
