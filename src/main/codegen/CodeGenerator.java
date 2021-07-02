@@ -135,17 +135,16 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 Descriptor top = semanticStack.pop();
                 Descriptor bottom = semanticStack.pop();
                 Expression.binary(bottom, top ,sem);
+                break;
             case "neg":
                 Expression.unary(semanticStack.pop(),"neg");
                 break;
 
 
-
-
-
             case "call":
                 break;
             case "print_out":
+                SystemCall.printOut();
                 break;
             case "input_int":
                 SystemCall.inputInt();
@@ -194,6 +193,10 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 AssemblyWriter.label(cjpLabel);
                 break;
             case "jb":
+                // this label is for cjz
+                String tempL = labelStack.pop();
+                AssemblyWriter.instruction("b",labelStack.pop());
+                labelStack.push(tempL);
                 break;
             case "jz":
                 String label = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
@@ -206,6 +209,9 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 AssemblyWriter.instruction("jz",value,label);
                 break;
             case "cjb":
+                String label1 = LabelGenerator.label(LabelGenerator.Type.LOOP , getPrefix());
+                labelStack.push(label1);
+                AssemblyWriter.label(label1);
                 break;
 
 
@@ -265,8 +271,9 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 Assignment.idAssign(leftId,right);
                 break;
             case "reference_assign": // id.id <- expr
-                Descriptor idRef = semanticStack.pop();
                 Descriptor idSrc = semanticStack.pop();
+                Descriptor idRef = semanticStack.pop();
+                Assignment.refAssign(idRef,idSrc,right);
                 break;
             case "array_assign": // id[sub expr] <- expr
                 Descriptor left = semanticStack.pop();
