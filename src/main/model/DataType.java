@@ -1,6 +1,5 @@
 package main.model;
 
-import java.util.Arrays;
 
 public enum DataType {
     INT, // 0
@@ -8,7 +7,8 @@ public enum DataType {
     DOUBLE, // 2
     STRING, // 3
     BOOL, // 4
-    VOID; // 5
+    VOID,
+    ID; // 5
 
 
     public boolean isNumeric() {

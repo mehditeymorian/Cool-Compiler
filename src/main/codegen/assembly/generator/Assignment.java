@@ -8,7 +8,7 @@ import main.codegen.writer.AssemblyWriter;
 public class Assignment {
 
     public static void idAssign(Descriptor idDesc , Descriptor expressionDesc) {
-        idDesc.setDataType(Utils.getDataType(idDesc.fullAddress()));
+        Utils.setDataType(idDesc);
         String command = getCommand(expressionDesc);
         String destination = "";
         String src = "";
@@ -34,8 +34,26 @@ public class Assignment {
         AssemblyWriter.instruction(command,destination,src);
     }
 
-    public static void refAssign() {
+    public static void refAssign(Descriptor classDesc , Descriptor refDesc , Descriptor expressionDesc) {
+        Utils.setDataType(classDesc);
+        String className = classDesc.getClassName();
+        String dest = className + "_" + refDesc.getValue();
+        String command = getCommand(expressionDesc);
+        String src = "";
 
+        switch (expressionDesc.getType()) {
+            case LITERAL: // a <- 2;
+                src = expressionDesc.getValue();
+                break;
+            case REGISTER: // a <- t0;
+                src = expressionDesc.getValue();
+                CodeGenerator.tempVariables.add(expressionDesc.getValue());
+                break;
+            case VARIABLE:
+
+                break;
+        }
+        AssemblyWriter.instruction(command, dest ,src);
     }
 
     public static void arrayAssign() {

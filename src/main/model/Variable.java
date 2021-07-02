@@ -56,7 +56,11 @@ public class Variable {
     }
 
     public void setVariableType(String type) {
-        this.dataType = DataType.valueOf(type.toUpperCase());
+        try {
+            this.dataType = DataType.valueOf(type.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            this.dataType = DataType.ID;
+        }
     }
 
     @Override

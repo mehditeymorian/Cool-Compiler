@@ -11,6 +11,7 @@ public class Descriptor {
     private String prefix;
     private Type type;
     private DataType dataType;
+    private String className;
 
 
     public Descriptor(String value , String prefix , Type type) {
@@ -23,12 +24,25 @@ public class Descriptor {
         return dataType;
     }
 
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
     public void setDataType(DataType dataType) {
         this.dataType = dataType;
     }
 
     public void setDataType(String type) {
-        this.dataType = DataType.valueOf(type.toUpperCase());
+        try {
+            this.dataType = DataType.valueOf(type.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            this.dataType = DataType.ID;
+            className = type;
+        }
     }
 
     public String getValue() {
@@ -40,6 +54,8 @@ public class Descriptor {
     }
 
     public String fullAddress() {
+//        if (className != null) return className + "_" + getValue();
+
         return getPrefix() + "_" + getValue();
     }
 
