@@ -70,19 +70,23 @@ public class AssemblyWriter {
     }
 
     public static void memory(String name , DataType dataType) {
+        memory(name, dataType,"0");
+    }
+
+    public static void memory(String name , DataType dataType, String value) {
         String typeLabel;
         switch (dataType) {
             case INT:
-                typeLabel = ".word 0";
+                typeLabel = ".word "+value;
                 break;
             case REAL:
-                typeLabel = ".word 0";
+                typeLabel = ".word "+value;
                 break;
             case VOID:
                 typeLabel = "";
                 break;
             case DOUBLE:
-                typeLabel = ".float 0";
+                typeLabel = ".float "+value;
                 break;
             case STRING:
                 typeLabel = ".space "+ BUFFER_MAX + " ";
@@ -94,7 +98,7 @@ public class AssemblyWriter {
     }
 
     public static void memoryStr(String name , String value) {
-        write(INSTANCE.memory , name , ":" , ".asciiz \"" , value , "\"");
+        write(INSTANCE.memory , name , ":" , " .asciiz \"" , value , "\"");
     }
 
     public static void memoryArray(String name , int size) {

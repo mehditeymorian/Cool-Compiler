@@ -4,8 +4,9 @@ package main.codegen.writer;
 public class LabelGenerator {
     private static int loopCount = 0;
     private static int jumpCount = 0;
+    private static int constantCount = 0;
     public enum Type {
-        LOOP, JUMP
+        LOOP, JUMP, CONSTANT
     }
 
     public static String variable(String... scopes) {
@@ -14,7 +15,9 @@ public class LabelGenerator {
 
     // label for loops jumps
     public static String label(Type type, String ...scopes) {
-        int count = type == Type.LOOP ? loopCount++: jumpCount++;
+        int count = type == Type.LOOP ? loopCount++:
+                    type == Type.JUMP ? jumpCount++
+                                      : constantCount++;
         if (scopes == null) return "label_" + count;
         String prefix = String.join("_" , scopes);
         String typeName = type.name().toLowerCase();

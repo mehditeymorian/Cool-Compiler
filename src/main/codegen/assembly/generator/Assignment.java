@@ -43,24 +43,43 @@ public class Assignment {
     }
 
     private static void assignString(Descriptor idDesc , Descriptor expressionDesc) {
-        CodeGenerator.tempVariables.add(expressionDesc.getValue());
-        Utils.setDataType(idDesc);
-        String dest = idDesc.fullAddress();
+        String loopLabel = LabelGenerator.label(LabelGenerator.Type.LOOP , "STR_EXTRACT");
         String constant1 = CodeGenerator.tempVariables.pollFirst();
+        String dest = idDesc.fullAddress();
         String temp = CodeGenerator.tempVariables.pollFirst();
         String i = CodeGenerator.tempVariables.pollFirst();
-        String loopLabel = LabelGenerator.label(LabelGenerator.Type.LOOP , "STR_EXTRACT");
+        String src = "";
+        String srcLen = "0";
+
+        switch (expressionDesc.getType()) {
+            case REGISTER:
+                src = STRING_BUFFER;
+                srcLen = STRING_BUFFER_LEN;
+                break;
+            case LITERAL:
+                src = LabelGenerator.label(LabelGenerator.Type.CONSTANT);
+                srcLen =  LabelGenerator.label(LabelGenerator.Type.CONSTANT);
+                // create a constant for String and its size
+                AssemblyWriter.memoryStr(src,expressionDesc.getValue());
+                AssemblyWriter.memory(srcLen,DataType.INT,expressionDesc.getValue().length()+"");
+                break;
+        }
+        CodeGenerator.tempVariables.add(expressionDesc.getValue());
+        Utils.setDataType(idDesc);
+
+
 
         instruction("li" , constant1 , "1");
-        instruction("li",i,BUFFER_MAX);
+        instruction("lw",i,srcLen);
         label(loopLabel);
-        instruction("lb",temp,STRING_BUFFER+"("+i+")");
+        instruction("lb",temp,src+"("+i+")");
         instruction("sb",temp,dest+"("+i+")");
         instruction("sub",i,i,constant1);
         instruction("bgez",i,loopLabel);
 
-        CodeGenerator.tempVariables.add(temp);
         CodeGenerator.tempVariables.add(i);
+        CodeGenerator.tempVariables.add(temp);
+
     }
 
     public static void refAssign(Descriptor classDesc , Descriptor refDesc , Descriptor expressionDesc) {
