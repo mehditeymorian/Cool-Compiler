@@ -11,6 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AssemblyWriter {
+    public static final String STRING_BUFFER = "BUFFER";
+    public static final String STRING_BUFFER_LEN = "BUFFER_LEN";
+    public static final String BUFFER_MAX = "30";
+
     public static AssemblyWriter INSTANCE;
     private List<String> codeText;
     private List<String> memory;
@@ -26,7 +30,17 @@ public class AssemblyWriter {
         codeText = new ArrayList<>();
         memory = new ArrayList<>();
 
+        write(codeText,"\t\t.text");
+//        write(codeText,"\t\t.align 2");
+        write(codeText,"\t\t.globl main");
+        write(codeText,"main:");
+
         write(memory , "\t\t" , ".data");
+//        write(memory , "\t\t" , ".align 0");
+        write(memory,"nl:", ".asciiz", "\"\\n\"");
+        write(memory,STRING_BUFFER,":", " .space ", BUFFER_MAX);
+        write(memory,STRING_BUFFER_LEN,":", " .word ", "0");
+        write(memory,"NEW_LINE:", " .asciiz \"\\n\"");
     }
 
     public static void flush() {
@@ -59,19 +73,19 @@ public class AssemblyWriter {
         String typeLabel;
         switch (dataType) {
             case INT:
-                typeLabel = ".half";
+                typeLabel = ".word 0";
                 break;
             case REAL:
-                typeLabel = ".word";
+                typeLabel = ".word 0";
                 break;
             case VOID:
                 typeLabel = "";
                 break;
             case DOUBLE:
-                typeLabel = ".float";
+                typeLabel = ".float 0";
                 break;
             case STRING:
-                typeLabel = ".asciiz";
+                typeLabel = ".space "+ BUFFER_MAX + " ";
                 break;
             default:
                 typeLabel = "";
@@ -99,7 +113,7 @@ public class AssemblyWriter {
     }
 
     private static void write(List<String> list , String... values) {
-        list.add(String.join(" " , values));
+        list.add(String.join("" , values));
     }
 
 }

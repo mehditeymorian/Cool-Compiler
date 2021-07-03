@@ -142,16 +142,15 @@ public class CodeGenerator implements main.parser.CodeGenerator {
 
 
             case "call":
+                functionCall(true);
                 break;
-            case "print_out":
-                SystemCall.printOut();
+            case "no_param_call":
+                functionCall(false);
                 break;
             case "input_int":
                 SystemCall.inputInt();
                 break;
-            case "input_string":
-                SystemCall.inputString();
-                break;
+
             case "call_len_str":
                 SystemCall.lenStr();
                 break;
@@ -206,7 +205,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 String value = getAdr(descriptor);
                 if (descriptor.getType() != Descriptor.Type.LITERAL)
                     tempVariables.add(value);
-                AssemblyWriter.instruction("jz",value,label);
+                AssemblyWriter.instruction("beqz",value,label);
                 break;
             case "cjb":
                 String label1 = LabelGenerator.label(LabelGenerator.Type.LOOP , getPrefix());
@@ -261,6 +260,36 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             default:
 
         }
+    }
+
+    private void functionCall(boolean hasParam) {
+        if (hasParam) {
+            Descriptor top = semanticStack.pop();
+            Descriptor down = semanticStack.pop();
+            String name = down.getValue();
+            switch (name) {
+                case "out_int":
+                    SystemCall.printInt(top);
+                    break;
+                case "out_string":
+                    SystemCall.printString(top);
+                    break;
+                case "print_line":
+                    SystemCall.printLine();
+                    break;
+            }
+        }else {
+            Descriptor descriptor = semanticStack.pop();
+            switch (descriptor.getValue()) {
+                case "print_line":
+                    SystemCall.printLine();
+                    break;
+                case "input_str":
+                    SystemCall.inputString();
+                    break;
+            }
+        }
+
     }
 
     private void simpleAssignment() {

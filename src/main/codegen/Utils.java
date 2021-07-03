@@ -2,8 +2,6 @@ package main.codegen;
 
 import main.codegen.desc.Descriptor;
 import main.codegen.writer.AssemblyWriter;
-import main.model.DataType;
-import sun.security.krb5.internal.crypto.Des;
 
 import java.util.Map;
 
@@ -13,8 +11,13 @@ public class Utils {
 
     public static String getAdr(Descriptor descriptor) {
         String result;
-        if (descriptor.getType() == Descriptor.Type.LITERAL)
-            result = descriptor.getValue();
+        if (descriptor.getType() == Descriptor.Type.LITERAL){
+            String command = "li";
+            String src = descriptor.getValue();
+            String destination = tempVariables.pollFirst();
+            AssemblyWriter.instruction(command,destination,src);
+            result = destination;
+        }
         else if (descriptor.getType() == Descriptor.Type.REGISTER)
             result = descriptor.getValue();
         else { // (left.getType() == Descriptor.Type.VARIABLE)
@@ -24,23 +27,30 @@ public class Utils {
             AssemblyWriter.instruction(command , destination , src);
             result = destination;
             // set data type
-            descriptor.setDataType(getDataType(src));
+            setDataType(descriptor);
         }
 
         return result;
     }
 
-    public static DataType getDataType(String fullAddress) {
+    public static void setDataType(Descriptor descriptor) {
+        String fullAddress = descriptor.fullAddress();
         // looking for full address
         for (Map.Entry<String, Descriptor> each : CodeGenerator.variables.entrySet()) {
-            if (each.getKey().equals(fullAddress))
-                return each.getValue().getDataType();
+            if (each.getKey().equals(fullAddress)){
+                descriptor.setDataType(each.getValue().getDataType());
+                descriptor.setClassName(each.getValue().getClassName());
+                return;
+            }
         }
         String[] split = fullAddress.split("_");
         String classAddress = split[0] + "_" + split[2];
         for (Map.Entry<String, Descriptor> each : CodeGenerator.variables.entrySet()) {
-            if (each.getKey().equals(classAddress))
-                return each.getValue().getDataType();
+            if (each.getKey().equals(classAddress)){
+                descriptor.setDataType(each.getValue().getDataType());
+                descriptor.setClassName(each.getValue().getClassName());
+                return;
+            }
         }
 
         throw new IllegalArgumentException("variable " + fullAddress + " not found!");
