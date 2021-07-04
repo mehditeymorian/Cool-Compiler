@@ -18,7 +18,7 @@ public class LabelGenerator {
         int count = type == Type.LOOP ? loopCount++:
                     type == Type.JUMP ? jumpCount++
                                       : constantCount++;
-        if (scopes == null) return "label_" + count;
+        if (scopes == null || scopes.length == 0) return type.name() + count;
         String prefix = String.join("_" , scopes);
         String typeName = type.name().toLowerCase();
         return prefix + "_" + typeName + count;

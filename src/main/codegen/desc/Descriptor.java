@@ -12,6 +12,7 @@ public class Descriptor {
     private Type type;
     private DataType dataType;
     private String className;
+    private boolean isArray;
 
 
     public Descriptor(String value , String prefix , Type type) {
@@ -22,6 +23,14 @@ public class Descriptor {
 
     public DataType getDataType() {
         return dataType;
+    }
+
+    public boolean isArray() {
+        return isArray;
+    }
+
+    public void setArray(boolean array) {
+        isArray = array;
     }
 
     public String getClassName() {
@@ -54,6 +63,7 @@ public class Descriptor {
     }
 
     public String fullAddress() {
+        if(getPrefix() == null) return getValue();
 //        if (className != null) return className + "_" + getValue();
 
         return getPrefix() + "_" + getValue();

@@ -3,6 +3,7 @@ package main.codegen.assembly.generator;
 import main.codegen.CodeGenerator;
 import main.codegen.desc.Descriptor;
 import main.codegen.writer.AssemblyWriter;
+import main.codegen.writer.LabelGenerator;
 import main.model.DataType;
 import sun.security.krb5.internal.crypto.Des;
 
@@ -35,6 +36,9 @@ public class SystemCall {
     public static void printString(Descriptor descriptor) {
         switch (descriptor.getType()) {
             case LITERAL:
+                String src2 = LabelGenerator.label(LabelGenerator.Type.CONSTANT);
+                AssemblyWriter.memoryStr(src2,descriptor.getValue());
+                printString(new Descriptor(src2 , null , Descriptor.Type.VARIABLE));
                 break;
             case VARIABLE:
                 String src = descriptor.fullAddress();
@@ -61,7 +65,7 @@ public class SystemCall {
         // take line string
         instructionC("input string code","li","$v0","8");
         instruction("la" , "$a0" , STRING_BUFFER);
-        instruction("la" , "$a1" , STRING_BUFFER_LEN);
+        instruction("la" , "$a1" , BUFFER_MAX);
         instructionC("input string","syscall");
 
         // descriptor for buffer address
