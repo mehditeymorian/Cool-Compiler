@@ -3,104 +3,162 @@ package main.codegen.assembly.generator;
 import main.codegen.CodeGenerator;
 import main.codegen.Utils;
 import main.codegen.desc.Descriptor;
+import main.codegen.desc.MinusPlus;
 import main.codegen.writer.AssemblyWriter;
 import main.model.DataType;
 
 
 import static main.codegen.CodeGenerator.tempVariables;
-import static main.codegen.Utils.getAdr;
+import static main.codegen.Utils.*;
+import static main.codegen.writer.AssemblyWriter.FLOAT_PRECISION;
 
 public class Expression {
+    public static final int PRE_MINUS_PLUS = -1;
+    public static final int POST_MINUS_PLUS = 1;
 
-    public static void unary(Descriptor descriptor, String operator) {
+    public static void unary(Descriptor descriptor , String operator) {
+        // TODO: 7/4/2021 fix for floating point
         switch (operator) {
             case "neg":
-                arithmetic(descriptor,"neg");
+                arithmetic(descriptor , "neg");
                 break;
         }
     }
 
-    public static void binary(Descriptor left , Descriptor right , String operator) {
-        switch (operator) {
+    public static void binary(Descriptor left , Descriptor right , String operatorRaw) {
+        // set data type
+        if (left.getType() == Descriptor.Type.VARIABLE)
+            Utils.setDataType(left);
+        if (right.getType() == Descriptor.Type.VARIABLE)
+            Utils.setDataType(right);
+
+        DataType resultType = left.getDataType().mix(right.getDataType());
+        String operator;
+        // TODO: 7/4/2021 casting not necessary for compare
+        // TODO: 7/4/2021 send proper branch command
+        switch (operatorRaw) {
             case "bitwise_xor":
-                arithmetic(left, right, "xor");
+                if (resultType == DataType.REAL)
+                    throw new IllegalArgumentException("cannot perform XOR(^) operator on floating point.");
+                arithmetic(left , right , "xor",resultType);
                 break;
             case "bitwise_and":
-                arithmetic(left, right, "and");
+                if (resultType == DataType.REAL)
+                    throw new IllegalArgumentException("cannot perform AND(&) operator on floating point.");
+                arithmetic(left , right , "and",resultType);
                 break;
             case "bitwise_or":
-                arithmetic(left, right, "or");
+                if (resultType == DataType.REAL)
+                    throw new IllegalArgumentException("cannot perform OR(|) operator on floating point.");
+                arithmetic(left , right , "or",resultType);
                 break;
             case "bigger_than":
-                arithmetic(left,right,"sgt");
+                if (resultType == DataType.REAL)
+                    realCompare(left,right,"c.gt"+FLOAT_PRECISION);
+                else
+                arithmetic(left , right , "sgt",resultType);
                 break;
             case "bigger_equal":
-                arithmetic(left,right,"sge");
+                if (resultType == DataType.REAL)
+                    realCompare(left,right,"c.ge"+FLOAT_PRECISION);
+                else
+                    arithmetic(left , right , "sge",resultType);
                 break;
             case "equal_equal":
-                arithmetic(left,right,"seq");
+                if (resultType == DataType.REAL)
+                    realCompare(left,right,"c.eq"+FLOAT_PRECISION);
+                else
+                    arithmetic(left , right , "seq",resultType);
                 break;
             case "not_equal":
-                arithmetic(left,right,"sne");
+                if (resultType == DataType.REAL)
+                    realCompare(left , right , "c.ne" + FLOAT_PRECISION);
+                else
+                    arithmetic(left , right , "sne",resultType);
                 break;
             case "less_than":
-                arithmetic(left,right,"sl t");
+                if (resultType == DataType.REAL)
+                    realCompare(left,right,"c.lt"+FLOAT_PRECISION);
+                else
+                    arithmetic(left , right , "slt",resultType);
                 break;
             case "less_equal":
-                arithmetic(left,right,"sl e");
+                if (resultType == DataType.REAL)
+                    realCompare(left,right,"c.le"+FLOAT_PRECISION);
+                else
+                    arithmetic(left , right , "sle",resultType);
                 break;
             case "add":
-                arithmetic(left,right,"add");
+                operator = resultType == DataType.REAL ? "add" + FLOAT_PRECISION : "add";
+                arithmetic(left , right , operator,resultType);
                 break;
             case "sub":
-                arithmetic(left,right,"sub");
+                operator = resultType == DataType.REAL ? "sub" + FLOAT_PRECISION : "sub";
+                arithmetic(left , right , operator,resultType);
                 break;
             case "mult":
-                arithmetic(left,right,"mul");
+                operator = resultType == DataType.REAL ? "mul" + FLOAT_PRECISION : "mulo";
+                arithmetic(left , right , operator,resultType);
                 break;
             case "div":
-                arithmetic(left,right,"di");
+                operator = resultType == DataType.REAL ? "div" + FLOAT_PRECISION : "di";
+                arithmetic(left , right , operator,resultType);
                 break;
             case "mod":
-                arithmetic(left,right,"rem");
+                if (resultType == DataType.REAL)
+                    throw new IllegalArgumentException("cannot perform Mod(%) operator on floating point.");
+                arithmetic(left , right , "rem",resultType);
                 break;
         }
     }
 
-    private static void arithmetic(Descriptor left , Descriptor right , String command) {
-        String dest = tempVariables.pollFirst();
-        String adr1 = getAdr(left);
-        String adr2 = getAdr(right);
+    private static void realCompare(Descriptor left , Descriptor right , String command) {
+//        String dest = getTempRegister(DataType.REAL);
+        String adr1 = getAdr(left, DataType.REAL);
+        String adr2 = getAdr(right,DataType.REAL);
 
-        // check type
-        Utils.numericType(left , right);
 
-        if (left.getType() != Descriptor.Type.LITERAL) {
-            tempVariables.add(adr1);
-            adr1 = wrapRegister(adr1);
-        }
-        if (right.getType() != Descriptor.Type.LITERAL) {
-            tempVariables.add(adr2);
-            adr2 = wrapRegister(adr2);
-        }
+        tempVariables.add(adr1);
+        tempVariables.add(adr2);
 
-        AssemblyWriter.instruction(command,dest,adr1,adr2);
-        Descriptor result = new Descriptor(dest , null , Descriptor.Type.REGISTER);
-        result.setDataType(left.getDataType().mix(right.getDataType()));
+
+
+        AssemblyWriter.instruction(command , adr1 , adr2);
+//        AssemblyWriter.instruction("cfc1",dest,"$25");
+//        AssemblyWriter.instructionC("read float condition flag","andi",dest,"1");
+        Descriptor result = new Descriptor(null , null , Descriptor.Type.REGISTER);
+        result.setDataType(DataType.REAL);
         CodeGenerator.semanticStack.push(result);
+
+    }
+
+    private static void arithmetic(Descriptor left , Descriptor right , String command, DataType resultType) {
+        String dest = getTempRegister(resultType);
+        String adr1 = getAdr(left,resultType);
+        String adr2 = getAdr(right,resultType);
+
+
+        releaseTempRegister(adr1);
+        releaseTempRegister(adr2);
+
+
+        doMinusPlusUnary(right , adr2 , PRE_MINUS_PLUS);
+        doMinusPlusUnary(left , adr1 , PRE_MINUS_PLUS);
+
+        AssemblyWriter.instruction(command , dest , adr1 , adr2);
+        Descriptor result = new Descriptor(dest , null , Descriptor.Type.REGISTER);
+        result.setDataType(resultType);
+        CodeGenerator.semanticStack.push(result);
+
+        doMinusPlusUnary(null , null , POST_MINUS_PLUS);
+        doMinusPlusUnary(null , null , POST_MINUS_PLUS);
     }
 
     private static void arithmetic(Descriptor descriptor , String command) {
-        String dest = tempVariables.pollFirst();
-        String src = getAdr(descriptor);
+        String src = getAdr(descriptor,descriptor.getDataType());
 
-        if (descriptor.getType() != Descriptor.Type.LITERAL) {
-            tempVariables.add(src);
-            src = wrapRegister(src);
-        }
-
-        AssemblyWriter.instruction(command,dest,src);
-        Descriptor result = new Descriptor(dest , null , Descriptor.Type.REGISTER);
+        AssemblyWriter.instruction(command , src , src);
+        Descriptor result = new Descriptor(src , null , Descriptor.Type.REGISTER);
         result.setDataType(descriptor.getDataType());
         CodeGenerator.semanticStack.push(result);
     }
@@ -108,5 +166,29 @@ public class Expression {
 
     public static String wrapRegister(String name) {
         return "0(" + name + ")";
+    }
+
+    public static void doMinusPlusUnary(Descriptor descriptor , String adr , int state) { // TODO: 7/2/2021 FIX THIS SHIT
+        if (CodeGenerator.minusPlusStack.isEmpty())
+            return;
+
+        MinusPlus minusPlus = CodeGenerator.minusPlusStack.pop();
+        int code = minusPlus.getCode();
+        if (state == PRE_MINUS_PLUS && code < 0 || state == POST_MINUS_PLUS && code > 0) {
+            if (descriptor == null) {
+                descriptor = minusPlus.getDescriptor();
+                adr = getAdr(descriptor,descriptor.getDataType());
+                if (descriptor.getType() != Descriptor.Type.LITERAL) {
+                    tempVariables.add(adr);
+                    adr = wrapRegister(adr);
+                }
+            }
+            String src = tempVariables.pollFirst();
+            String command = Math.abs(code) == 2 ? "sub" : "add";
+            String adr2 = "1";
+            AssemblyWriter.instruction(command , src , adr , adr2);
+            AssemblyWriter.instruction("sw" , src , descriptor.fullAddress());
+            tempVariables.add(src);
+        } else CodeGenerator.minusPlusStack.add(0 , minusPlus);
     }
 }

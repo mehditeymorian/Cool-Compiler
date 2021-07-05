@@ -2,6 +2,7 @@ package main.codegen;
 
 import main.TokenList;
 import main.codegen.assembly.generator.Assignment;
+import main.codegen.assembly.generator.Cast;
 import main.codegen.assembly.generator.Expression;
 import main.codegen.assembly.generator.SystemCall;
 import main.codegen.desc.MinusPlus;
@@ -11,13 +12,15 @@ import main.model.*;
 
 import java.util.*;
 
-import static main.codegen.Utils.getAdr;
+import static main.codegen.Utils.*;
 
 public class CodeGenerator implements main.parser.CodeGenerator {
+    public static TreeSet<String> tempVariables;
+    public static TreeSet<String> tempFloatVariables;
+
     private final TokenList tokenList;
     public static Map<String,Descriptor> variables;
     public static Stack<MinusPlus> minusPlusStack;
-    public static TreeSet<String> tempVariables;
     public static Stack<Descriptor> semanticStack;
     public static Stack<String> labelStack;
     private final Stack<String> typeStack;
@@ -36,6 +39,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         labelStack = new Stack<>();
         typeStack = new Stack<>();
         scopeStack = new Stack<>();
+        tempFloatVariables = new TreeSet<>();
         tempVariables = new TreeSet<>();
         classes = new ArrayList<>();
         tempParams = new ArrayList<>();
@@ -45,6 +49,10 @@ public class CodeGenerator implements main.parser.CodeGenerator {
     private void initTempVariables() {
         for (int i = 0; i < 10; i++) {
             tempVariables.add("$t" + i);
+        }
+
+        for (int i = 0; i <= 31; i += 2){
+            tempFloatVariables.add("$f" + i);
         }
     }
 
@@ -97,10 +105,12 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 icv.setDataType(DataType.INT);
                 semanticStack.push(icv);
                 break;
-            case "push_double":
-                Descriptor doubleLiteral = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.LITERAL);
-                doubleLiteral.setDataType(DataType.DOUBLE);
-                semanticStack.push(doubleLiteral);
+            case "push_bool":
+                System.out.println(currentSymbol.getValue());
+                String boolValue = currentSymbol.getValue().equals("true") ? "1" : "0";
+                Descriptor boolLiteral = new Descriptor(boolValue , getPrefix() , Descriptor.Type.LITERAL);
+                boolLiteral.setDataType(DataType.BOOL);
+                semanticStack.push(boolLiteral);
                 break;
             case "push_void":
                 Descriptor voidLiteral = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.LITERAL);
@@ -115,6 +125,9 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 break;
             case "add_symbol":
                 addSymbolToScope();
+                break;
+            case "create_array":
+
                 break;
 
 
@@ -159,12 +172,17 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 break;
 
 
+            case "cast":
+                Cast.perform(semanticStack.pop(),DataType.valueOf(typeStack.pop().toUpperCase()));
+                break;
             case "assign": // -= += *= /=
                 assignment();
                 break;
             case "simple_assign": // =
                 simpleAssignment();
                 break;
+            case "mult_assign":
+            case "div_assign":
             case "minus_assign": // -=
             case "plus_assign": // +=
             case "id_assign":
@@ -202,10 +220,16 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 labelStack.push(label);
 
                 Descriptor descriptor = semanticStack.pop();
-                String value = getAdr(descriptor);
-                if (descriptor.getType() != Descriptor.Type.LITERAL)
-                    tempVariables.add(value);
-                AssemblyWriter.instruction("beqz",value,label);
+                if (descriptor.getDataType() == null)
+                    setDataType(descriptor);
+                if (descriptor.getValue() == null) { // floating point compare
+                    AssemblyWriter.instruction("bc1t",label); // branch if coprocessor 1 flag is true
+                }else {
+                    String value = getAdr(descriptor,descriptor.getDataType());
+                    if (descriptor.getType() != Descriptor.Type.LITERAL)
+                        releaseTempRegister(value);
+                    AssemblyWriter.instruction("beqz",value,label);
+                }
                 break;
             case "cjb":
                 String label1 = LabelGenerator.label(LabelGenerator.Type.LOOP , getPrefix());
@@ -214,6 +238,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 break;
 
 
+            // TODO: 7/3/2021 fix these 
             case "pre_plus_plus":
                 minusPlusStack.push(new MinusPlus(null,-1));
                 break;
@@ -224,8 +249,10 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 minusPlusStack.push(new MinusPlus(semanticStack.peek(),1));
                 break;
             case "post_minus_minus":
-                minusPlusStack.push(new MinusPlus(semanticStack.peek(),2));                break;
+                minusPlusStack.push(new MinusPlus(semanticStack.peek(),2));                
+                break;
             case "not":
+                // TODO: 7/3/2021  
                 break;
 
 
@@ -312,13 +339,23 @@ public class CodeGenerator implements main.parser.CodeGenerator {
     }
 
     private void assignment() {
+        // TODO: 7/4/2021 add other type of assignment like ref assign and array assign 
+        Descriptor right = semanticStack.pop();
+        Descriptor leftId = semanticStack.pop();
         switch (assignType) {
             case "minus_assign":
-
+                Assignment.operatorAssign(leftId,right,"sub");
                 break;
             case "plus_assign":
-
+                Assignment.operatorAssign(leftId,right,"add");
                 break;
+            case "mult_assign":
+                Assignment.operatorAssign(leftId,right,"mulo");
+                break;
+            case "div_assign":
+                Assignment.operatorAssign(leftId,right,"div");
+                break;
+            // TODO: 7/4/2021 add % too 
         }
     }
 
@@ -343,6 +380,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
 
         Descriptor descriptor = semanticStack.pop();
         descriptor.setDataType(varType);
+        descriptor.setArray(arrayType);
         variables.put(descriptor.fullAddress() , descriptor);
 
         Variable variable = new Variable();

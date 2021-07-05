@@ -26,7 +26,7 @@ unknown: UNKNOWN+;
 
 KEYWORD: 'void' | 'for' | 'rof' | 'out_' | 'in_int()' | 'int' | 'while' | 'let' | 'new'
 	|	 'real' | 'if' | 'fi' | 'break' | 'then' | 'bool' | 'else' | 'Array' | 'continue' | 'len' | 'string'
-	|	 'return' | 'loop' | 'class' | 'in_string()' | 'pool';
+	|	 'return' | 'loop' | 'class' | 'in_string()' | 'pool' | 'true' | 'false';
 
 INT: NUMBER;
 

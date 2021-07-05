@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -172,13 +173,15 @@ public class CoolBaseListener implements CoolListener {
 				symbols.add(new Symbol(text , "icv",line,positionInLine));
 				break;
 			case HEX:
-				symbols.add(new Symbol(text , "real_literal",line,positionInLine));
+				String value = Integer.parseInt(text,10)+"";
+				symbols.add(new Symbol(value , "icv",line,positionInLine));
 				break;
 			case SCIENTIFIC:
-				symbols.add(new Symbol(text , "real_literal",line,positionInLine));
+				BigDecimal num = new BigDecimal(text);
+				symbols.add(new Symbol(num.toPlainString() , "real_literal",line,positionInLine));
 				break;
 			case FLOAT:
-				symbols.add(new Symbol(text , "double_literal",line,positionInLine));
+				symbols.add(new Symbol(text , "real_literal",line,positionInLine));
 				break;
 			case STRING:
 				symbols.add(new Symbol(text.substring(1 , text.length() - 1) , "string_literal",line,positionInLine));

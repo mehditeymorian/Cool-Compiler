@@ -5,8 +5,9 @@ import main.codegen.desc.Descriptor;
 import main.codegen.writer.AssemblyWriter;
 import main.codegen.writer.LabelGenerator;
 import main.model.DataType;
-import sun.security.krb5.internal.crypto.Des;
 
+import static main.codegen.Utils.getTempRegister;
+import static main.codegen.Utils.releaseTempRegister;
 import static main.codegen.writer.AssemblyWriter.*;
 
 public class SystemCall {
@@ -18,19 +19,20 @@ public class SystemCall {
                 src = descriptor.getValue();
                 break;
             case VARIABLE:
-                String temp = CodeGenerator.tempVariables.pollFirst();
+                String temp = getTempRegister(descriptor.getDataType());
                 instruction("lw",temp,descriptor.fullAddress());
                 src = "0(" + temp + ")";
-                CodeGenerator.tempVariables.add(temp);
+                releaseTempRegister(temp);
                 break;
             case REGISTER:
                 src = "0(" + descriptor.getValue() +")";
-                CodeGenerator.tempVariables.add(descriptor.getValue());
+                releaseTempRegister(descriptor.getValue());
                 break;
         }
-        instructionC("syscall number for print integer" , "li" , "$v0" , "1");
-        instructionC("print integer","la","$a0",src);
-        instruction("syscall");
+        // TODO: 7/4/2021 double check these for floating
+        instruction( "li" , "$v0" , "1");
+        instruction("la","$a0",src);
+        instructionC("print integer","syscall");
     }
 
     public static void printString(Descriptor descriptor) {
@@ -44,7 +46,7 @@ public class SystemCall {
                 String src = descriptor.fullAddress();
                 instruction("li","$v0","4");
                 instruction("la","$a0",src);
-                instruction("syscall");
+                instructionC("print string","syscall");
                 break;
         }
     }
@@ -53,7 +55,7 @@ public class SystemCall {
         instructionC("input int code","li","$v0","5");
         instructionC("input integer","syscall");
 
-        String dest = CodeGenerator.tempVariables.pollFirst();
+        String dest = getTempRegister(DataType.INT);
         instruction("move",dest,"$v0");
         Descriptor descriptor = new Descriptor(dest , null , Descriptor.Type.REGISTER);
         descriptor.setDataType(DataType.INT);
@@ -69,7 +71,7 @@ public class SystemCall {
         instructionC("input string","syscall");
 
         // descriptor for buffer address
-        String bufferReg = CodeGenerator.tempVariables.pollFirst();
+        String bufferReg = getTempRegister(DataType.STRING);
         Descriptor bufferDesc = new Descriptor(bufferReg , null , Descriptor.Type.REGISTER);
         bufferDesc.setDataType(DataType.STRING);
         CodeGenerator.semanticStack.push(bufferDesc);

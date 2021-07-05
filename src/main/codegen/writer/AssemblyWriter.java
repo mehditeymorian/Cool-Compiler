@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AssemblyWriter {
+    public static final String FLOAT_PRECISION = ".d";
     public static final String STRING_BUFFER = "BUFFER";
     public static final String STRING_BUFFER_LEN = "BUFFER_LEN";
     public static final String BUFFER_MAX = "30";
@@ -39,14 +40,15 @@ public class AssemblyWriter {
 //        write(memory , "\t\t" , ".align 0");
         write(memory,"nl:", ".asciiz", "\"\\n\"");
         write(memory,STRING_BUFFER,":", " .space ", BUFFER_MAX);
-        write(memory,STRING_BUFFER_LEN,":", " .word ", "0");
+        write(memory,STRING_BUFFER_LEN,":", " .word ", BUFFER_MAX);
         write(memory,"NEW_LINE:", " .asciiz \"\\n\"");
     }
 
     public static void flush() {
         Path path = Paths.get(INSTANCE.fileName);
         try {
-            Files.write(path , INSTANCE.codeText , StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE , StandardOpenOption.TRUNCATE_EXISTING);
+            Files.deleteIfExists(path);
+            Files.write(path , INSTANCE.codeText , StandardOpenOption.CREATE,StandardOpenOption.WRITE);
             Files.write(path , INSTANCE.memory , StandardOpenOption.APPEND);
         } catch (IOException e) {
             e.printStackTrace();
@@ -70,7 +72,7 @@ public class AssemblyWriter {
     }
 
     public static void memory(String name , DataType dataType) {
-        memory(name, dataType,"0");
+        memory(name, dataType, getDefaultValue(dataType));
     }
 
     public static void memory(String name , DataType dataType, String value) {
@@ -80,19 +82,16 @@ public class AssemblyWriter {
                 typeLabel = ".word "+value;
                 break;
             case REAL:
-                typeLabel = ".word "+value;
-                break;
-            case VOID:
-                typeLabel = "";
-                break;
-            case DOUBLE:
                 typeLabel = ".float "+value;
                 break;
             case STRING:
                 typeLabel = ".space "+ BUFFER_MAX + " ";
                 break;
+            case BOOL:
+                typeLabel = ".byte " + value;
+                break;
             default:
-                typeLabel = "";
+                throw new IllegalArgumentException(dataType.name() + " cannot be defined in memory!");
         }
         write(INSTANCE.memory , name , ": " , typeLabel);
     }
@@ -118,6 +117,20 @@ public class AssemblyWriter {
 
     private static void write(List<String> list , String... values) {
         list.add(String.join("" , values));
+    }
+
+    public static String getDefaultValue(DataType type) {
+        switch (type) {
+            case BOOL:
+            case INT:
+                return "0";
+            case REAL:
+                return "0.0";
+            case STRING:
+                return "";
+            default:
+                throw new IllegalArgumentException(type.name() + " doesn't have a default value");
+        }
     }
 
 }

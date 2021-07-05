@@ -1,15 +1,45 @@
 package main.codegen.assembly.generator;
 
-import main.codegen.CodeGenerator;
-import main.codegen.Utils;
 import main.codegen.desc.Descriptor;
 import main.codegen.writer.AssemblyWriter;
 import main.codegen.writer.LabelGenerator;
 import main.model.DataType;
 
+import static main.codegen.Utils.*;
 import static main.codegen.writer.AssemblyWriter.*;
 
 public class Assignment {
+
+    public static void operatorAssign(Descriptor idDesc , Descriptor expressionDesc , String operator) {
+        // TODO: 7/4/2021 check for mix of real and int
+
+        setDataType(idDesc);
+        String temp = getTempRegister(idDesc.getDataType());
+        String command = getStoreCommand(expressionDesc.getDataType());
+        String destination = idDesc.fullAddress();
+        String src = "";
+
+        // check type matching
+        equalType(idDesc , expressionDesc);
+
+        switch (expressionDesc.getType()) {
+            case LITERAL: // a <- 2;
+                src = getTempRegister(expressionDesc.getDataType());
+                instruction(getLoadImmCommand(expressionDesc.getDataType()) , src , expressionDesc.getValue());
+                break;
+            case REGISTER: // a <- t0;
+                src = expressionDesc.getValue();
+                releaseTempRegister(expressionDesc.getValue());
+                break;
+            case VARIABLE:
+
+                break;
+        }
+        instruction(getLoadCommand(idDesc.getDataType()),temp,destination);
+        instruction(operator,src,temp,src);
+        instruction(command , src , destination);
+        releaseTempRegister(temp);
+    }
 
     public static void idAssign(Descriptor idDesc , Descriptor expressionDesc) {
         if (expressionDesc.getDataType().equals(DataType.STRING)) {
@@ -17,23 +47,22 @@ public class Assignment {
             return;
         }
 
-        Utils.setDataType(idDesc);
-        String command = getCommand(expressionDesc);
+        setDataType(idDesc);
+        String command = getStoreCommand(expressionDesc.getDataType());
         String destination = idDesc.fullAddress();
         String src = "";
 
         // check type matching
-        Utils.equalType(idDesc , expressionDesc);
+        equalType(idDesc , expressionDesc);
 
         switch (expressionDesc.getType()) {
             case LITERAL: // a <- 2;
-                src = CodeGenerator.tempVariables.pollFirst();
-                instruction("li" , src , expressionDesc.getValue());
+                src = getTempRegister(expressionDesc.getDataType());
+                instruction(getLoadImmCommand(expressionDesc.getDataType()) , src , expressionDesc.getValue());
                 break;
             case REGISTER: // a <- t0;
                 src = expressionDesc.getValue();
-                CodeGenerator.tempVariables.add(expressionDesc.getValue());
-
+                releaseTempRegister(expressionDesc.getValue());
                 break;
             case VARIABLE:
 
@@ -44,10 +73,10 @@ public class Assignment {
 
     private static void assignString(Descriptor idDesc , Descriptor expressionDesc) {
         String loopLabel = LabelGenerator.label(LabelGenerator.Type.LOOP , "STR_EXTRACT");
-        String constant1 = CodeGenerator.tempVariables.pollFirst();
+        String constant1 = getTempRegister(DataType.INT);
         String dest = idDesc.fullAddress();
-        String temp = CodeGenerator.tempVariables.pollFirst();
-        String i = CodeGenerator.tempVariables.pollFirst();
+        String temp = getTempRegister(DataType.INT);
+        String i = getTempRegister(DataType.INT);
         String src = "";
         String srcLen = "0";
 
@@ -64,8 +93,8 @@ public class Assignment {
                 AssemblyWriter.memory(srcLen,DataType.INT,expressionDesc.getValue().length()+"");
                 break;
         }
-        CodeGenerator.tempVariables.add(expressionDesc.getValue());
-        Utils.setDataType(idDesc);
+        releaseTempRegister(expressionDesc.getValue());
+        setDataType(idDesc);
 
 
 
@@ -77,26 +106,25 @@ public class Assignment {
         instruction("sub",i,i,constant1);
         instruction("bgez",i,loopLabel);
 
-        CodeGenerator.tempVariables.add(i);
-        CodeGenerator.tempVariables.add(temp);
-
+        releaseTempRegister(i);
+        releaseTempRegister(temp);
     }
 
     public static void refAssign(Descriptor classDesc , Descriptor refDesc , Descriptor expressionDesc) {
-        Utils.setDataType(classDesc);
+        setDataType(classDesc);
         String className = classDesc.getClassName();
         String dest = className + "_" + refDesc.getValue();
-        String command = getCommand(expressionDesc);
+        String command = getStoreCommand(expressionDesc.getDataType());
         String src = "";
 
         switch (expressionDesc.getType()) {
             case LITERAL: // a <- 2;
-                src = CodeGenerator.tempVariables.pollFirst();
-                instruction("li" , src , expressionDesc.getValue());
+                src = getTempRegister(expressionDesc.getDataType());
+                instruction(getLoadImmCommand(expressionDesc.getDataType()) , src , expressionDesc.getValue());
                 break;
             case REGISTER: // a <- t0;
                 src = expressionDesc.getValue();
-                CodeGenerator.tempVariables.add(expressionDesc.getValue());
+                releaseTempRegister(expressionDesc.getValue());
                 break;
             case VARIABLE:
 
@@ -109,18 +137,4 @@ public class Assignment {
 
     }
 
-    private static String getCommand(Descriptor descriptor) {
-        switch (descriptor.getDataType()) {
-            case STRING:
-                return "";
-            case REAL:
-                return "";
-            case INT:
-                return "sw";
-            case DOUBLE:
-                return "";
-            default:
-                return "";
-        }
-    }
 }
