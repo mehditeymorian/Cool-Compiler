@@ -6,8 +6,7 @@ import main.codegen.writer.AssemblyWriter;
 import main.codegen.writer.LabelGenerator;
 import main.model.DataType;
 
-import static main.codegen.Utils.getTempRegister;
-import static main.codegen.Utils.releaseTempRegister;
+import static main.codegen.Utils.*;
 import static main.codegen.writer.AssemblyWriter.*;
 
 public class SystemCall {
@@ -77,28 +76,25 @@ public class SystemCall {
         CodeGenerator.semanticStack.push(bufferDesc);
 
         AssemblyWriter.instruction("la",bufferReg,STRING_BUFFER);
-
-//        // descriptor for buffer len
-//        String lenReg = CodeGenerator.tempVariables.pollFirst();
-//        Descriptor lenDesc = new Descriptor(lenReg , null , Descriptor.Type.REGISTER);
-//        lenDesc.setDataType(DataType.INT);
-//        CodeGenerator.semanticStack.push(lenDesc);
-//
-//        AssemblyWriter.instruction("lw",lenReg,STRING_BUFFER_LEN);
-
+        
     }
-
-    public static void lenId() {
-        // TODO: 7/2/2021  
-    }
-
-    public static void lenStr() {
-        // TODO: 7/2/2021  
-    }
+    
 
     public static void printLine() {
         instruction("li","$v0","4");
         instruction("la","$a0","NEW_LINE");
         instructionC("line feed","syscall");
+    }
+
+    public static void length(Descriptor descriptor) {
+        setDataType(descriptor);
+        // only array
+        if (descriptor.isArray()) {
+            String temp = getTempRegister(DataType.INT);
+            AssemblyWriter.instruction(getLoadCommand(DataType.INT) , temp , descriptor.sizeAddress());
+            Descriptor lengthDescriptor = new Descriptor(temp , null , Descriptor.Type.REGISTER);
+            lengthDescriptor.setDataType(DataType.INT);
+            CodeGenerator.semanticStack.push(lengthDescriptor);
+        }
     }
 }

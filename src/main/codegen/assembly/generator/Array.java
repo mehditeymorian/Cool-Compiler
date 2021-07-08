@@ -27,11 +27,9 @@ public class Array {
 
 
         // allocate memory
-        AssemblyWriter.instructionC("allocate","li","$v0","9");
-        AssemblyWriter.instructionC("set size","move","$a0",size);
-        AssemblyWriter.instruction("syscall");
+        String storeAddress = SpaceAllocator.allocate(size);
 
-        AssemblyWriter.instructionC("store address" , "sw" , "$v0" , idDescriptor.fullAddress());
+        AssemblyWriter.instructionC("store address" , "sw" , storeAddress , idDescriptor.fullAddress());
 
 
 

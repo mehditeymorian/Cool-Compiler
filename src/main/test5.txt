@@ -9,7 +9,7 @@ class Main {
         x <- new Array(int,size);
         i <- 0;
 
-        while ( i < size) loop
+        while ( i < len(x)) loop
             x[i] <- i + 1;
             i += 1;
         pool

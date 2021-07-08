@@ -341,6 +341,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                     break;
                 case "len":
                     SystemCall.length(top);
+                    break;
             }
         } else {
             Descriptor descriptor = semanticStack.pop();

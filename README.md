@@ -14,7 +14,8 @@
 - [x] Array assignment
 - [x] Output int and string
 - [x] Input int
-- [ ] len function
+- [x] len function array
+- [ ] len function string
 - [ ] dynamic strings
 - [ ] print function for all data types
 - [ ] input function for all data types
