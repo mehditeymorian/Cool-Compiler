@@ -182,12 +182,6 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "no_param_call":
                 functionCall(false);
                 break;
-            case "call_len_str":
-                SystemCall.lenStr();
-                break;
-            case "call_len_id":
-                SystemCall.lenId();
-                break;
 
 
             case "cast":
@@ -230,25 +224,15 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 break;
             case "jb":
                 // this label is for cjz
-//                String tempL = labelStack.pop();
                 AssemblyWriter.instruction("b" , labelStack.pop());
-//                labelStack.push(tempL);
+                break;
+            case "jb_while":
+                String temp = labelStack.pop();
+                AssemblyWriter.instruction("b" , labelStack.pop());
+                labelStack.push(temp);
                 break;
             case "jz":
-                String outLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
-                labelStack.push(outLabel);
-
-                Descriptor descriptor = semanticStack.pop();
-                if (descriptor.getDataType() == null)
-                    setDataType(descriptor);
-                if (descriptor.getValue() == null) { // floating point compare
-                    AssemblyWriter.instruction("bc1t" , outLabel); // branch if coprocessor 1 flag is true
-                } else {
-                    String value = getAddress(descriptor , descriptor.getDataType());
-                    if (descriptor.getType() != Descriptor.Type.LITERAL)
-                        releaseTempRegister(value);
-                    AssemblyWriter.instruction("beqz" , value , outLabel);
-                }
+                jz();
 
                 String bodyLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
                 labelStack.push(bodyLabel);
@@ -256,6 +240,9 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 String statementLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
                 labelStack.push(statementLabel);
                 AssemblyWriter.label(statementLabel);
+                break;
+            case "jz_while":
+                jz();
                 break;
             case "cjb":
                 String conditionLabel = LabelGenerator.label(LabelGenerator.Type.LOOP , getPrefix());
@@ -269,7 +256,6 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 AssemblyWriter.instruction("b" , labelStack.pop());
                 AssemblyWriter.label(l2);
                 labelStack.push(l3);
-//                labelStack.push(l2);
                 labelStack.push(l1);
                 break;
 
@@ -324,6 +310,23 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         }
     }
 
+    private void jz() {
+        String outLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
+        labelStack.push(outLabel);
+
+        Descriptor descriptor = semanticStack.pop();
+        if (descriptor.getDataType() == null)
+            setDataType(descriptor);
+        if (descriptor.getValue() == null) { // floating point compare
+            AssemblyWriter.instruction("bc1t" , outLabel); // branch if coprocessor 1 flag is true
+        } else {
+            String value = getAddress(descriptor , descriptor.getDataType());
+            if (descriptor.getType() != Descriptor.Type.LITERAL)
+                releaseTempRegister(value);
+            AssemblyWriter.instruction("beqz" , value , outLabel);
+        }
+    }
+
     private void functionCall(boolean hasParam) {
         if (hasParam) {
             Descriptor top = semanticStack.pop();
@@ -336,9 +339,8 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 case "out_string":
                     SystemCall.printString(top);
                     break;
-                case "print_line":
-                    SystemCall.printLine();
-                    break;
+                case "len":
+                    SystemCall.length(top);
             }
         } else {
             Descriptor descriptor = semanticStack.pop();
@@ -346,10 +348,10 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 case "print_line":
                     SystemCall.printLine();
                     break;
-                case "input_str":
+                case "in_string":
                     SystemCall.inputString();
                     break;
-                case "input_int":
+                case "in_int":
                     SystemCall.inputInt();
                     break;
             }

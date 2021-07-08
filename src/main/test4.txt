@@ -4,7 +4,7 @@ class Main {
         let x:int[];
         let size: int;
         let i: int;
-        size <- input_int();
+        size <- in_int();
 
         x <- new Array(int,size);
 
@@ -17,7 +17,7 @@ class Main {
             out_int(x[i]);
         rof
            */
-        out_str("second for loop");
+        out_string("second for loop");
 
         x <- new Array(int, size*2);
 
