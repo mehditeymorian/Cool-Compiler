@@ -2,7 +2,7 @@ package main.codegen.assembly.generator;
 
 import main.codegen.CodeGenerator;
 import main.codegen.Utils;
-import main.codegen.desc.Descriptor;
+import main.model.Descriptor;
 import main.codegen.writer.AssemblyWriter;
 import main.model.DataType;
 
@@ -20,7 +20,7 @@ public class Cast {
         }
 
         // part of casting happens in here
-        String src = getAdr(descriptor , dataType);
+        String src = getAddress(descriptor , dataType);
 
         if (descriptor.getDataType() == DataType.REAL) {
             String temp = getTempRegister(dataType);

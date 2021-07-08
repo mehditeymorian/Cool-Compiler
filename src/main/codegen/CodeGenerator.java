@@ -1,13 +1,10 @@
 package main.codegen;
 
 import main.TokenList;
-import main.codegen.assembly.generator.Assignment;
-import main.codegen.assembly.generator.Cast;
-import main.codegen.assembly.generator.Expression;
-import main.codegen.assembly.generator.SystemCall;
+import main.codegen.assembly.generator.*;
 import main.codegen.desc.MinusPlus;
 import main.codegen.writer.*;
-import main.codegen.desc.Descriptor;
+import main.model.Descriptor;
 import main.model.*;
 
 import java.util.*;
@@ -19,7 +16,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
     public static TreeSet<String> tempFloatVariables;
 
     private final TokenList tokenList;
-    public static Map<String,Descriptor> variables;
+    public static Map<String, Descriptor> variables;
     public static Stack<MinusPlus> minusPlusStack;
     public static Stack<Descriptor> semanticStack;
     public static Stack<String> labelStack;
@@ -30,6 +27,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
     private List<Variable> tempParams;
     private boolean arrayType;
     private String assignType = "";
+    private boolean arrayAccessOccur;
 
     public CodeGenerator(TokenList tokenList) {
         this.tokenList = tokenList;
@@ -51,7 +49,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             tempVariables.add("$t" + i);
         }
 
-        for (int i = 0; i <= 31; i += 2){
+        for (int i = 0; i <= 31; i += 2) {
             tempFloatVariables.add("$f" + i);
         }
     }
@@ -59,6 +57,16 @@ public class CodeGenerator implements main.parser.CodeGenerator {
     @Override
     public void doSemantic(String sem) {
         Symbol currentSymbol = tokenList.getCurrentSymbol();
+        try {
+            forSemantic(currentSymbol,sem);
+        } catch (Exception exception) {
+            String lineMessage = String.format("error on line %d character %d." , currentSymbol.getLine() , currentSymbol.getPositionInLine());
+            throw new RuntimeException(lineMessage , exception);
+        }
+
+    }
+
+    private void forSemantic(Symbol currentSymbol,String sem) {
         switch (sem) {
             case "end_scope":
                 scopeStack.pop();
@@ -127,9 +135,23 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 addSymbolToScope();
                 break;
             case "create_array":
-
+                typeStack.pop();
+//                Descriptor sizeDesc = semanticStack.pop();
+//                Descriptor nameDesc = semanticStack.pop();
+//                Array.create(nameDesc , sizeDesc);
+                // check assignment
                 break;
-
+            case "array_access":
+                if (arrayAccessOccur) {
+                    Descriptor indexDesc = semanticStack.pop();
+                    Descriptor idDesc = semanticStack.pop();
+                    Array.access(idDesc,indexDesc);
+                    arrayAccessOccur = false;
+                }
+                break;
+            case "set_access":
+                arrayAccessOccur = true;
+                break;
 
             case "bitwise_xor":
             case "bitwise_and":
@@ -147,10 +169,10 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "mod":
                 Descriptor top = semanticStack.pop();
                 Descriptor bottom = semanticStack.pop();
-                Expression.binary(bottom, top ,sem);
+                Expression.binary(bottom , top , sem);
                 break;
             case "neg":
-                Expression.unary(semanticStack.pop(),"neg");
+                Expression.unary(semanticStack.pop() , "neg");
                 break;
 
 
@@ -160,10 +182,6 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "no_param_call":
                 functionCall(false);
                 break;
-            case "input_int":
-                SystemCall.inputInt();
-                break;
-
             case "call_len_str":
                 SystemCall.lenStr();
                 break;
@@ -173,13 +191,14 @@ public class CodeGenerator implements main.parser.CodeGenerator {
 
 
             case "cast":
-                Cast.perform(semanticStack.pop(),DataType.valueOf(typeStack.pop().toUpperCase()));
+                Cast.perform(semanticStack.pop() , DataType.valueOf(typeStack.pop().toUpperCase()));
                 break;
             case "assign": // -= += *= /=
                 assignment();
                 break;
             case "simple_assign": // =
                 simpleAssignment();
+                arrayAccessOccur = false;
                 break;
             case "mult_assign":
             case "div_assign":
@@ -193,15 +212,15 @@ public class CodeGenerator implements main.parser.CodeGenerator {
 
 
             case "cjz":
-                String goLabel = labelStack.pop();
-                AssemblyWriter.label(goLabel);
+                // out label
+                AssemblyWriter.label(labelStack.pop());
                 break;
             case "jp":
                 String jzLabel = labelStack.pop();
 
                 String label2 = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
                 labelStack.push(label2);
-                AssemblyWriter.instruction("b",label2);
+                AssemblyWriter.instruction("b" , label2);
 
                 AssemblyWriter.label(jzLabel);
                 break;
@@ -211,55 +230,71 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 break;
             case "jb":
                 // this label is for cjz
-                String tempL = labelStack.pop();
-                AssemblyWriter.instruction("b",labelStack.pop());
-                labelStack.push(tempL);
+//                String tempL = labelStack.pop();
+                AssemblyWriter.instruction("b" , labelStack.pop());
+//                labelStack.push(tempL);
                 break;
             case "jz":
-                String label = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
-                labelStack.push(label);
+                String outLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
+                labelStack.push(outLabel);
 
                 Descriptor descriptor = semanticStack.pop();
                 if (descriptor.getDataType() == null)
                     setDataType(descriptor);
                 if (descriptor.getValue() == null) { // floating point compare
-                    AssemblyWriter.instruction("bc1t",label); // branch if coprocessor 1 flag is true
-                }else {
-                    String value = getAdr(descriptor,descriptor.getDataType());
+                    AssemblyWriter.instruction("bc1t" , outLabel); // branch if coprocessor 1 flag is true
+                } else {
+                    String value = getAddress(descriptor , descriptor.getDataType());
                     if (descriptor.getType() != Descriptor.Type.LITERAL)
                         releaseTempRegister(value);
-                    AssemblyWriter.instruction("beqz",value,label);
+                    AssemblyWriter.instruction("beqz" , value , outLabel);
                 }
+
+                String bodyLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
+                labelStack.push(bodyLabel);
+                AssemblyWriter.instruction("b" , bodyLabel);
+                String statementLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
+                labelStack.push(statementLabel);
+                AssemblyWriter.label(statementLabel);
                 break;
             case "cjb":
-                String label1 = LabelGenerator.label(LabelGenerator.Type.LOOP , getPrefix());
-                labelStack.push(label1);
-                AssemblyWriter.label(label1);
+                String conditionLabel = LabelGenerator.label(LabelGenerator.Type.LOOP , getPrefix());
+                labelStack.push(conditionLabel);
+                AssemblyWriter.label(conditionLabel);
+                break;
+            case "visit_loop_body":
+                String l1 = labelStack.pop();
+                String l2 = labelStack.pop();
+                String l3 = labelStack.pop();
+                AssemblyWriter.instruction("b" , labelStack.pop());
+                AssemblyWriter.label(l2);
+                labelStack.push(l3);
+//                labelStack.push(l2);
+                labelStack.push(l1);
                 break;
 
 
-            // TODO: 7/3/2021 fix these 
+            // TODO: 7/3/2021 fix these
             case "pre_plus_plus":
-                minusPlusStack.push(new MinusPlus(null,-1));
+                minusPlusStack.push(new MinusPlus(null , -1));
                 break;
             case "pre_minus_minus":
-                minusPlusStack.push(new MinusPlus(null,-2));
+                minusPlusStack.push(new MinusPlus(null , -2));
                 break;
             case "post_plus_plus":
-                minusPlusStack.push(new MinusPlus(semanticStack.peek(),1));
+                minusPlusStack.push(new MinusPlus(semanticStack.peek() , 1));
                 break;
             case "post_minus_minus":
-                minusPlusStack.push(new MinusPlus(semanticStack.peek(),2));                
+                minusPlusStack.push(new MinusPlus(semanticStack.peek() , 2));
                 break;
             case "not":
-                // TODO: 7/3/2021  
+                // TODO: 7/3/2021
                 break;
 
 
             case "visit_body":
                 break;
-            case "visit_loop_body":
-                break;
+
 
 
             case "load_return":
@@ -305,7 +340,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                     SystemCall.printLine();
                     break;
             }
-        }else {
+        } else {
             Descriptor descriptor = semanticStack.pop();
             switch (descriptor.getValue()) {
                 case "print_line":
@@ -313,6 +348,9 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                     break;
                 case "input_str":
                     SystemCall.inputString();
+                    break;
+                case "input_int":
+                    SystemCall.inputInt();
                     break;
             }
         }
@@ -324,16 +362,17 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         switch (assignType) {
             case "id_assign": // id <- expr.
                 Descriptor leftId = semanticStack.pop();
-                Assignment.idAssign(leftId,right);
+                Assignment.idAssign(leftId , right);
                 break;
             case "reference_assign": // id.id <- expr
                 Descriptor idSrc = semanticStack.pop();
                 Descriptor idRef = semanticStack.pop();
-                Assignment.refAssign(idRef,idSrc,right);
+                Assignment.refAssign(idRef , idSrc , right);
                 break;
             case "array_assign": // id[sub expr] <- expr
+                Descriptor indexDesc = semanticStack.pop();
                 Descriptor left = semanticStack.pop();
-                Descriptor subExpr = semanticStack.pop();
+                Assignment.arrayAssign(left, indexDesc, right);
                 break;
         }
     }
@@ -344,16 +383,16 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         Descriptor leftId = semanticStack.pop();
         switch (assignType) {
             case "minus_assign":
-                Assignment.operatorAssign(leftId,right,"sub");
+                Assignment.operatorAssign(leftId , right , "sub");
                 break;
             case "plus_assign":
-                Assignment.operatorAssign(leftId,right,"add");
+                Assignment.operatorAssign(leftId , right , "add");
                 break;
             case "mult_assign":
-                Assignment.operatorAssign(leftId,right,"mulo");
+                Assignment.operatorAssign(leftId , right , "mulo");
                 break;
             case "div_assign":
-                Assignment.operatorAssign(leftId,right,"div");
+                Assignment.operatorAssign(leftId , right , "div");
                 break;
             // TODO: 7/4/2021 add % too 
         }
@@ -394,7 +433,12 @@ public class CodeGenerator implements main.parser.CodeGenerator {
 
         variable.setLabel(LabelGenerator.variable(descriptor.getPrefix() , descriptor.getValue()));
         getCurrentScope().addVariable(variable);
-        AssemblyWriter.memory(variable.getLabel() , variable.getVariableType());
+        if (!variable.isArray())
+            AssemblyWriter.memory(variable.getLabel() , variable.getVariableType());
+        else {
+            AssemblyWriter.memory(variable.getLabel() , DataType.INT);
+            AssemblyWriter.memory(variable.getSizeLabel() , DataType.INT);
+        }
 
     }
 

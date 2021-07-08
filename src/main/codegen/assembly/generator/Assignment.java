@@ -1,6 +1,6 @@
 package main.codegen.assembly.generator;
 
-import main.codegen.desc.Descriptor;
+import main.model.Descriptor;
 import main.codegen.writer.AssemblyWriter;
 import main.codegen.writer.LabelGenerator;
 import main.model.DataType;
@@ -42,12 +42,15 @@ public class Assignment {
     }
 
     public static void idAssign(Descriptor idDesc , Descriptor expressionDesc) {
+        setDataType(idDesc);
+        if (idDesc.isArray()) {
+            Array.create(idDesc , expressionDesc);
+            return;
+        }
         if (expressionDesc.getDataType().equals(DataType.STRING)) {
             assignString(idDesc , expressionDesc);
             return;
         }
-
-        setDataType(idDesc);
         String command = getStoreCommand(expressionDesc.getDataType());
         String destination = idDesc.fullAddress();
         String src = "";
@@ -133,8 +136,26 @@ public class Assignment {
         instruction(command , src , dest);
     }
 
-    public static void arrayAssign() {
+    public static void arrayAssign(Descriptor idDescriptor ,Descriptor indexDescriptor, Descriptor expression) {
+        setDataType(idDescriptor);
+        setDataType(indexDescriptor);
+        setDataType(expression);
 
+        if (idDescriptor.getType() != Descriptor.Type.VARIABLE)
+            throw new IllegalArgumentException("only id can be on the idDescriptor side of equation");
+
+
+        String base = getAddress(idDescriptor , idDescriptor.getDataType());
+        String src = getAddress(expression , expression.getDataType());
+        String index = getAddress(indexDescriptor , indexDescriptor.getDataType());
+        String storeCommand = getStoreCommand(idDescriptor.getDataType());
+
+
+        if (indexDescriptor.getDataType() != DataType.BOOL)
+            AssemblyWriter.instruction("mul",index,index,"4");
+        AssemblyWriter.instruction("add" , base , base , index);
+        AssemblyWriter.instruction(storeCommand , src , "("+base+")");
+
+        releaseTempRegister(base,src,index);
     }
-
 }

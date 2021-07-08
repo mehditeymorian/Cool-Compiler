@@ -1,0 +1,26 @@
+class Main {
+
+    main() : int {
+
+        let y: real;
+        /*
+        let x: real;
+
+        x <- y + 2.3;
+        */
+        y <- (real) 3;
+
+
+        //out_int( (int) (5 + 10.9));
+
+        /*
+        if (x != y) then
+            out_string("equal");
+        else
+            out_string("not equal");
+        fi
+        */
+
+        return 0;
+    }
+}

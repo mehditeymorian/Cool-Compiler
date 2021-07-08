@@ -9,6 +9,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class AssemblyWriter {
     public static final String FLOAT_PRECISION = ".d";
@@ -38,7 +40,7 @@ public class AssemblyWriter {
 
         write(memory , "\t\t" , ".data");
 //        write(memory , "\t\t" , ".align 0");
-        write(memory,"nl:", ".asciiz", "\"\\n\"");
+        write(memory,"nl:", " .asciiz", "\"\\n\"");
         write(memory,STRING_BUFFER,":", " .space ", BUFFER_MAX);
         write(memory,STRING_BUFFER_LEN,":", " .word ", BUFFER_MAX);
         write(memory,"NEW_LINE:", " .asciiz \"\\n\"");
@@ -100,8 +102,26 @@ public class AssemblyWriter {
         write(INSTANCE.memory , name , ":" , " .asciiz \"" , value , "\"");
     }
 
-    public static void memoryArray(String name , int size) {
-
+    public static void memoryArray(String name, DataType dataType , int count) {
+        String dataDirective;
+        String data;
+        switch (dataType) {
+            case INT:
+                dataDirective = " .word ";
+                data = IntStream.range(0 , count).mapToObj(value -> "0").collect(Collectors.joining(" , "));
+                break;
+            case REAL:
+                dataDirective = " .float ";
+                data = IntStream.range(0 , count).mapToObj(value -> "0.0").collect(Collectors.joining(" , "));
+                break;
+            case BOOL:
+                dataDirective = " .byte ";
+                data = IntStream.range(0 , count).mapToObj(value -> "0").collect(Collectors.joining(" , "));
+                break;
+            default:
+                throw new IllegalArgumentException(dataType.name() + " cannot be defined in memory!");
+        }
+        write(INSTANCE.memory,name,": ",dataDirective,count+" , ",data);
     }
 
     public static void setMemoryValue(String label , String value) {

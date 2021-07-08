@@ -1,7 +1,7 @@
 package main.codegen.assembly.generator;
 
 import main.codegen.CodeGenerator;
-import main.codegen.desc.Descriptor;
+import main.model.Descriptor;
 import main.codegen.writer.AssemblyWriter;
 import main.codegen.writer.LabelGenerator;
 import main.model.DataType;

@@ -15,6 +15,10 @@ public class Variable {
         return label;
     }
 
+    public String getSizeLabel() {
+        return getLabel() + "_size";
+    }
+
     public void setLabel(String label) {
         this.label = label;
     }

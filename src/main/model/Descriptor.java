@@ -1,4 +1,4 @@
-package main.codegen.desc;
+package main.model;
 
 import main.model.DataType;
 
@@ -67,6 +67,11 @@ public class Descriptor {
 //        if (className != null) return className + "_" + getValue();
 
         return getPrefix() + "_" + getValue();
+    }
+
+    // use for arrays
+    public String sizeAddress() {
+        return fullAddress() + "_size";
     }
 
     public Type getType() {

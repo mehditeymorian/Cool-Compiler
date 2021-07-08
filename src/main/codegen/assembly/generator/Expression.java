@@ -2,7 +2,7 @@ package main.codegen.assembly.generator;
 
 import main.codegen.CodeGenerator;
 import main.codegen.Utils;
-import main.codegen.desc.Descriptor;
+import main.model.Descriptor;
 import main.codegen.desc.MinusPlus;
 import main.codegen.writer.AssemblyWriter;
 import main.model.DataType;
@@ -114,8 +114,8 @@ public class Expression {
 
     private static void realCompare(Descriptor left , Descriptor right , String command) {
 //        String dest = getTempRegister(DataType.REAL);
-        String adr1 = getAdr(left, DataType.REAL);
-        String adr2 = getAdr(right,DataType.REAL);
+        String adr1 = getAddress(left, DataType.REAL);
+        String adr2 = getAddress(right,DataType.REAL);
 
 
         tempVariables.add(adr1);
@@ -134,8 +134,8 @@ public class Expression {
 
     private static void arithmetic(Descriptor left , Descriptor right , String command, DataType resultType) {
         String dest = getTempRegister(resultType);
-        String adr1 = getAdr(left,resultType);
-        String adr2 = getAdr(right,resultType);
+        String adr1 = getAddress(left,resultType);
+        String adr2 = getAddress(right,resultType);
 
 
         releaseTempRegister(adr1);
@@ -155,7 +155,7 @@ public class Expression {
     }
 
     private static void arithmetic(Descriptor descriptor , String command) {
-        String src = getAdr(descriptor,descriptor.getDataType());
+        String src = getAddress(descriptor,descriptor.getDataType());
 
         AssemblyWriter.instruction(command , src , src);
         Descriptor result = new Descriptor(src , null , Descriptor.Type.REGISTER);
@@ -177,7 +177,7 @@ public class Expression {
         if (state == PRE_MINUS_PLUS && code < 0 || state == POST_MINUS_PLUS && code > 0) {
             if (descriptor == null) {
                 descriptor = minusPlus.getDescriptor();
-                adr = getAdr(descriptor,descriptor.getDataType());
+                adr = getAddress(descriptor,descriptor.getDataType());
                 if (descriptor.getType() != Descriptor.Type.LITERAL) {
                     tempVariables.add(adr);
                     adr = wrapRegister(adr);

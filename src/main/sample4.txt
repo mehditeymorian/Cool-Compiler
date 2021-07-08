@@ -1,0 +1,22 @@
+class Main {
+    let a: int;
+    let b: int;
+
+    main() : int {
+
+        a <- 2;
+        b <- a / 2;
+
+        for(a <- 1; a <= 5; a <- a + 1)
+            b <- a + 1;
+        rof
+
+        a <- 20;
+
+        while (a != 10) loop
+            a <- a - 1;
+        pool
+
+        return 0;
+    }
+}

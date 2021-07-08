@@ -6,9 +6,10 @@ class Main {
         let i: int;
         let j: int;
 
-        i <- 2;
+        i <- in_int();
         j <- 3;
 
+        //a <- (++i + j++ * --i);
         a <- i + j;
 
         if a > 3 then

@@ -1,6 +1,6 @@
 package main.codegen;
 
-import main.codegen.desc.Descriptor;
+import main.model.Descriptor;
 import main.codegen.writer.AssemblyWriter;
 import main.model.DataType;
 
@@ -14,7 +14,7 @@ public class Utils {
 
     // resultDataType is same as descriptor.getDataType() in normal situation
     // but if result data type is different then they are different
-    public static String getAdr(Descriptor descriptor, DataType resultDataType) { // result resultDataType
+    public static String getAddress(Descriptor descriptor, DataType resultDataType) { // result resultDataType
         String result;
         if (descriptor.getType() == Descriptor.Type.LITERAL) {
             String command = getLoadImmCommand(descriptor.getDataType());
@@ -45,7 +45,7 @@ public class Utils {
 
 
     public static void setDataType(Descriptor descriptor) {
-        if (descriptor.getDataType() != null)
+        if (descriptor.getDataType() != null || descriptor.getType() != Descriptor.Type.VARIABLE)
             return;
         String fullAddress = descriptor.fullAddress();
         // looking for full address
@@ -123,8 +123,11 @@ public class Utils {
         return dataType == DataType.REAL ? tempFloatVariables.pollFirst() : tempVariables.pollFirst();
     }
 
-    public static void releaseTempRegister(String register) {
-        if (register.startsWith("$f")) tempFloatVariables.add(register);
-        else tempVariables.add(register);
+
+    public static void releaseTempRegister(String ...registers) {
+        for (String register : registers) {
+            if (register.startsWith("$f")) tempFloatVariables.add(register);
+            else tempVariables.add(register);
+        }
     }
 }
