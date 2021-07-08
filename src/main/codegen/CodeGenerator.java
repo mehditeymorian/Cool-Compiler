@@ -58,7 +58,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
     public void doSemantic(String sem) {
         Symbol currentSymbol = tokenList.getCurrentSymbol();
         try {
-            forSemantic(currentSymbol,sem);
+            forSemantic(currentSymbol , sem);
         } catch (Exception exception) {
             String lineMessage = String.format("error on line %d character %d." , currentSymbol.getLine() , currentSymbol.getPositionInLine());
             throw new RuntimeException(lineMessage , exception);
@@ -66,7 +66,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
 
     }
 
-    private void forSemantic(Symbol currentSymbol,String sem) {
+    private void forSemantic(Symbol currentSymbol , String sem) {
         switch (sem) {
             case "end_scope":
                 scopeStack.pop();
@@ -145,7 +145,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 if (arrayAccessOccur) {
                     Descriptor indexDesc = semanticStack.pop();
                     Descriptor idDesc = semanticStack.pop();
-                    Array.access(idDesc,indexDesc);
+                    Array.access(idDesc , indexDesc);
                     arrayAccessOccur = false;
                 }
                 break;
@@ -259,6 +259,15 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 labelStack.push(l1);
                 break;
 
+            case "load_return":
+                break;
+            case "continue_statement":
+                break;
+            case "return_statement":
+                break;
+            case "break_statement":
+                break;
+
 
             // TODO: 7/3/2021 fix these
             case "pre_plus_plus":
@@ -281,16 +290,6 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "visit_body":
                 break;
 
-
-
-            case "load_return":
-                break;
-            case "continue_statement":
-                break;
-            case "return_statement":
-                break;
-            case "break_statement":
-                break;
 
             case "any_expr":
 
@@ -315,16 +314,12 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         labelStack.push(outLabel);
 
         Descriptor descriptor = semanticStack.pop();
-        if (descriptor.getDataType() == null)
-            setDataType(descriptor);
-        if (descriptor.getValue() == null) { // floating point compare
-            AssemblyWriter.instruction("bc1t" , outLabel); // branch if coprocessor 1 flag is true
-        } else {
-            String value = getAddress(descriptor , descriptor.getDataType());
-            if (descriptor.getType() != Descriptor.Type.LITERAL)
-                releaseTempRegister(value);
-            AssemblyWriter.instruction("beqz" , value , outLabel);
-        }
+        setDataType(descriptor);
+        String value = getAddress(descriptor , descriptor.getDataType());
+        if (descriptor.getType() != Descriptor.Type.LITERAL)
+            releaseTempRegister(value);
+        AssemblyWriter.instruction("beqz" , value , outLabel);
+
     }
 
     private void functionCall(boolean hasParam) {
@@ -375,7 +370,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "array_assign": // id[sub expr] <- expr
                 Descriptor indexDesc = semanticStack.pop();
                 Descriptor left = semanticStack.pop();
-                Assignment.arrayAssign(left, indexDesc, right);
+                Assignment.arrayAssign(left , indexDesc , right);
                 break;
         }
     }

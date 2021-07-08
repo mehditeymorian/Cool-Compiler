@@ -68,7 +68,7 @@ public class Utils {
             }
         }
 
-        throw new IllegalArgumentException("variable " + fullAddress + " not found!");
+        throw new IllegalArgumentException("variable " + descriptor.getValue() + " not found!");
     }
 
     public static void equalType(Descriptor first , Descriptor second) {

@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class AssemblyWriter {
-    public static final String FLOAT_PRECISION = ".d";
+    public static final String FLOAT_PRECISION = ".s";
     public static final String STRING_BUFFER = "BUFFER";
     public static final String STRING_BUFFER_LEN = "BUFFER_LEN";
     public static final String BUFFER_MAX = "30";

@@ -5,8 +5,9 @@ public class LabelGenerator {
     private static int loopCount = 0;
     private static int jumpCount = 0;
     private static int constantCount = 0;
+    private static int outCount = 0;
     public enum Type {
-        LOOP, JUMP, CONSTANT
+        LOOP, JUMP, CONSTANT, OUT
     }
 
     public static String variable(String... scopes) {
@@ -16,7 +17,8 @@ public class LabelGenerator {
     // label for loops jumps
     public static String label(Type type, String ...scopes) {
         int count = type == Type.LOOP ? loopCount++:
-                    type == Type.JUMP ? jumpCount++
+                    type == Type.JUMP ? jumpCount++:
+                    type == Type.OUT ? outCount++
                                       : constantCount++;
         if (scopes == null || scopes.length == 0) return type.name() + count;
         String prefix = String.join("_" , scopes);
