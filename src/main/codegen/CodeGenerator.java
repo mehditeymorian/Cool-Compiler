@@ -83,7 +83,6 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 createFunction();
                 break;
             case "end_function":
-                System.out.println("end function");
                 break;
             case "push_id":
                 Descriptor item = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.VARIABLE);
