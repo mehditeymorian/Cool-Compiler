@@ -120,12 +120,16 @@ public class Utils {
     }
 
     public static String getTempRegister(DataType dataType) {
-        return dataType == DataType.REAL ? tempFloatVariables.pollFirst() : tempVariables.pollFirst();
+        String s = dataType == DataType.REAL ? tempFloatVariables.pollFirst() : tempVariables.pollFirst();
+        if (s == null) throw new IllegalArgumentException("Not enough register :(");
+        return s;
     }
 
 
     public static void releaseTempRegister(String ...registers) {
+        if (registers == null) return;
         for (String register : registers) {
+            if (register == null) continue;
             if (register.startsWith("$f")) tempFloatVariables.add(register);
             else tempVariables.add(register);
         }

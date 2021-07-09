@@ -2,7 +2,6 @@ package main.codegen;
 
 import main.TokenList;
 import main.codegen.assembly.generator.*;
-import main.codegen.desc.MinusPlus;
 import main.codegen.writer.*;
 import main.model.Descriptor;
 import main.model.*;
@@ -10,14 +9,19 @@ import main.model.*;
 import java.util.*;
 
 import static main.codegen.Utils.*;
+import static main.codegen.assembly.generator.Expression.*;
 
 public class CodeGenerator implements main.parser.CodeGenerator {
+    public static final int PRE_MM = -1;
+    public static final int PRE_PP = -2;
+    public static final int POST_MM = 1;
+    public static final int POST_PP = 2;
+
     public static TreeSet<String> tempVariables;
     public static TreeSet<String> tempFloatVariables;
 
     private final TokenList tokenList;
     public static Map<String, Descriptor> variables;
-    public static Stack<MinusPlus> minusPlusStack;
     public static Stack<Descriptor> semanticStack;
     public static Stack<String> labelStack;
     private final Stack<String> typeStack;
@@ -29,11 +33,12 @@ public class CodeGenerator implements main.parser.CodeGenerator {
     private String assignType = "";
     private boolean arrayAccessOccur;
 
+    private int minusPlusFlag = 0;
+
     public CodeGenerator(TokenList tokenList) {
         this.tokenList = tokenList;
         variables = new HashMap<>();
         semanticStack = new Stack<>();
-        minusPlusStack = new Stack<>();
         labelStack = new Stack<>();
         typeStack = new Stack<>();
         scopeStack = new Stack<>();
@@ -82,9 +87,11 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 break;
             case "push_id":
                 Descriptor item = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.VARIABLE);
+                if (minusPlusFlag != 0) {
+                    item.setMinusPlusState(minusPlusFlag);
+                    minusPlusFlag = 0;
+                }
                 semanticStack.push(item);
-                if (!minusPlusStack.isEmpty())
-                    minusPlusStack.peek().setDescriptor(item);
                 break;
             case "push_type":
                 typeStack.push(currentSymbol.getValue());
@@ -169,10 +176,10 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "mod":
                 Descriptor top = semanticStack.pop();
                 Descriptor bottom = semanticStack.pop();
-                Expression.binary(bottom , top , sem);
+                binary(bottom , top , sem);
                 break;
             case "neg":
-                Expression.unary(semanticStack.pop() , "neg");
+                unary(semanticStack.pop() , "neg");
                 break;
 
 
@@ -269,28 +276,41 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 break;
 
 
-            // TODO: 7/3/2021 fix these
             case "pre_plus_plus":
-                minusPlusStack.push(new MinusPlus(null , -1));
+                minusPlusFlag = PRE_MP * PLUS;
                 break;
             case "pre_minus_minus":
-                minusPlusStack.push(new MinusPlus(null , -2));
+                minusPlusFlag = PRE_MP * MINUS;
                 break;
             case "post_plus_plus":
-                minusPlusStack.push(new MinusPlus(semanticStack.peek() , 1));
+                semanticStack.peek().setMinusPlusState(POST_MP * PLUS);
                 break;
             case "post_minus_minus":
-                minusPlusStack.push(new MinusPlus(semanticStack.peek() , 2));
+                semanticStack.peek().setMinusPlusState(POST_MP * MINUS);
                 break;
             case "not":
-                // TODO: 7/3/2021
+                unary(semanticStack.pop() , "not");
                 break;
 
 
             case "visit_body":
                 break;
 
+            case "unary_expression":
+                // for expression like  assignment semnaticStack is empty so just skip it
+                if (semanticStack.isEmpty())
+                    return;
+                Descriptor descriptor = semanticStack.pop();
 
+                if (descriptor.getMinusPlusState() == 0)
+                    throw new IllegalArgumentException("Not a statement.");
+
+                setDataType(descriptor);
+                String adr1 = minusPlus(descriptor , null , PRE_MP);
+                adr1 = adr1 == null ? getAddress(descriptor , descriptor.getDataType()) : adr1;
+                minusPlus(descriptor , adr1 , POST_MP);
+                releaseTempRegister(adr1);
+                break;
             case "any_expr":
 
                 break;
@@ -316,8 +336,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         Descriptor descriptor = semanticStack.pop();
         setDataType(descriptor);
         String value = getAddress(descriptor , descriptor.getDataType());
-        if (descriptor.getType() != Descriptor.Type.LITERAL)
-            releaseTempRegister(value);
+        releaseTempRegister(value);
         AssemblyWriter.instruction("beqz" , value , outLabel);
 
     }

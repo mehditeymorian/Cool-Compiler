@@ -4,20 +4,19 @@ import main.codegen.CodeGenerator;
 import main.codegen.Utils;
 import main.codegen.writer.LabelGenerator;
 import main.model.Descriptor;
-import main.codegen.desc.MinusPlus;
 import main.codegen.writer.AssemblyWriter;
 import main.model.DataType;
-import sun.security.krb5.internal.crypto.Des;
 
 
 import static main.codegen.CodeGenerator.semanticStack;
-import static main.codegen.CodeGenerator.tempVariables;
 import static main.codegen.Utils.*;
 import static main.codegen.writer.AssemblyWriter.FLOAT_PRECISION;
 
 public class Expression {
-    public static final int PRE_MINUS_PLUS = -1;
-    public static final int POST_MINUS_PLUS = 1;
+    public static final int PRE_MP = -1;
+    public static final int POST_MP = 1;
+    public static final int PLUS = 1;
+    public static final int MINUS = 2;
 
     public static void binary(Descriptor left , Descriptor right , String operatorRaw) {
         // set data type
@@ -104,16 +103,23 @@ public class Expression {
 
     private static void realCompare(Descriptor left , Descriptor right , String command , String branch) {
 //        String dest = getTempRegister(DataType.REAL);
-        String adr1 = getAddress(left , DataType.REAL);
-        String adr2 = getAddress(right , DataType.REAL);
 
+        String adr1 = minusPlus(left , null , PRE_MP);
+        adr1 = adr1 == null ? getAddress(left , DataType.REAL) : adr1;
+        minusPlus(left , adr1 , POST_MP);
+
+        String adr2 = minusPlus(right , null , PRE_MP);
+        adr2 = adr2 == null ? getAddress(right , DataType.REAL) : adr2;
+        minusPlus(right , adr2 , POST_MP);
 
         releaseTempRegister(adr1 , adr2);
-
 
         AssemblyWriter.instruction(command , adr1 , adr2);
 
 
+
+
+        // read float flag and store it into a temp register
         String temp = getTempRegister(DataType.INT);
         String setLabel = LabelGenerator.label(LabelGenerator.Type.OUT);
 
@@ -126,35 +132,27 @@ public class Expression {
         result.setDataType(DataType.INT);
         CodeGenerator.semanticStack.push(result);
 
-//        AssemblyWriter.instruction("cfc1",dest,"$25");
-//        AssemblyWriter.instructionC("read float condition flag","andi",dest,"1");
-
-//        Descriptor result = new Descriptor(null , null , Descriptor.Type.REGISTER);
-//        result.setDataType(DataType.REAL);
-//        CodeGenerator.semanticStack.push(result);
 
     }
 
     private static void arithmetic(Descriptor left , Descriptor right , String command , DataType resultType) {
         String dest = getTempRegister(resultType);
-        String adr1 = getAddress(left , resultType);
-        String adr2 = getAddress(right , resultType);
 
+        String adr1 = minusPlus(left , null , PRE_MP);
+        adr1 = adr1 == null ? getAddress(left , resultType) : adr1;
+        minusPlus(left , adr1 , POST_MP);
 
-        releaseTempRegister(adr1);
-        releaseTempRegister(adr2);
+        String adr2 = minusPlus(right , null , PRE_MP);
+        adr2 = adr2 == null ? getAddress(right , resultType) : adr2;
+        minusPlus(right , adr2 , POST_MP);
 
-
-        doMinusPlusUnary(right , adr2 , PRE_MINUS_PLUS);
-        doMinusPlusUnary(left , adr1 , PRE_MINUS_PLUS);
+        releaseTempRegister(adr1,adr2);
 
         AssemblyWriter.instruction(command , dest , adr1 , adr2);
         Descriptor result = new Descriptor(dest , null , Descriptor.Type.REGISTER);
         result.setDataType(resultType);
         CodeGenerator.semanticStack.push(result);
 
-        doMinusPlusUnary(null , null , POST_MINUS_PLUS);
-        doMinusPlusUnary(null , null , POST_MINUS_PLUS);
     }
 
     public static void unary(Descriptor descriptor , String operator) {
@@ -195,31 +193,29 @@ public class Expression {
     }
 
 
-    public static String wrapRegister(String name) {
-        return "0(" + name + ")";
-    }
+    public static String minusPlus(Descriptor descriptor,String src, int condition) {
+        if (descriptor.getType() != Descriptor.Type.VARIABLE)
+            return null;
 
-    public static void doMinusPlusUnary(Descriptor descriptor , String adr , int state) { // TODO: 7/2/2021 FIX THIS SHIT
-        if (CodeGenerator.minusPlusStack.isEmpty())
-            return;
-
-        MinusPlus minusPlus = CodeGenerator.minusPlusStack.pop();
-        int code = minusPlus.getCode();
-        if (state == PRE_MINUS_PLUS && code < 0 || state == POST_MINUS_PLUS && code > 0) {
-            if (descriptor == null) {
-                descriptor = minusPlus.getDescriptor();
-                adr = getAddress(descriptor , descriptor.getDataType());
-                if (descriptor.getType() != Descriptor.Type.LITERAL) {
-                    tempVariables.add(adr);
-                    adr = wrapRegister(adr);
-                }
+        int minusPlusState = descriptor.getMinusPlusState();
+        if ((minusPlusState > 0 && condition == POST_MP) || (minusPlusState < 0 && condition == PRE_MP)) {
+            if (src == null)
+                src = getAddress(descriptor , descriptor.getDataType());
+            minusPlusState = Math.abs(minusPlusState);
+            String command = minusPlusState == PLUS ? "add" : "sub";
+            String value = "1";
+            if (descriptor.getDataType() == DataType.REAL) {
+                command = command + FLOAT_PRECISION;
+                value = getTempRegister(DataType.REAL);
+                AssemblyWriter.instruction(getLoadImmCommand(DataType.REAL),value,"1.0");
+                releaseTempRegister(value);
             }
-            String src = tempVariables.pollFirst();
-            String command = Math.abs(code) == 2 ? "sub" : "add";
-            String adr2 = "1";
-            AssemblyWriter.instruction(command , src , adr , adr2);
-            AssemblyWriter.instruction("sw" , src , descriptor.fullAddress());
-            tempVariables.add(src);
-        } else CodeGenerator.minusPlusStack.add(0 , minusPlus);
+            AssemblyWriter.instruction(command , src,src , value);
+            AssemblyWriter.instruction(getStoreCommand(descriptor.getDataType()),src,descriptor.fullAddress());
+            return src;
+        }
+
+        return null;
     }
+
 }

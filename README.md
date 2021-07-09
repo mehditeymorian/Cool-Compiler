@@ -15,15 +15,16 @@
 - [x] Output int and string
 - [x] Input int
 - [x] len function array
+- [x] pre -- ++
+- [x] post -- ++
 - [ ] len function string
 - [ ] dynamic strings
+- [ ] break, continue
 - [ ] print function for all data types
 - [ ] input function for all data types
 - [ ] function in the class no args no return
 - [ ] function in the class no args with return
 - [ ] function in the class with args
-- [ ] pre -- ++ 
-- [ ] post -- ++
 - [ ] multiple class
 - [ ] class ref assignment
 - [ ] class function

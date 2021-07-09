@@ -8,15 +8,6 @@ class Main {
 
         x <- new Array(int,size);
 
-        /*
-        for(i <- 0; i < size; i+=1)
-            x[i] <- i + 1;
-        rof
-
-        for(i <- 0; i < size*2; i+=1)
-            out_int(x[i]);
-        rof
-           */
         out_string("second for loop");
 
         x <- new Array(int, size*2);
@@ -31,8 +22,6 @@ class Main {
         rof
 
 
-
-        //out_int(x[1]);
 
 
 

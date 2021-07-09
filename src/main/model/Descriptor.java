@@ -13,7 +13,7 @@ public class Descriptor {
     private DataType dataType;
     private String className;
     private boolean isArray;
-
+    private int minusPlusState;
 
     public Descriptor(String value , String prefix , Type type) {
         this.value = value;
@@ -58,10 +58,20 @@ public class Descriptor {
         return value;
     }
 
+    public int getMinusPlusState() {
+        return minusPlusState;
+    }
+
+    public void setMinusPlusState(int minusPlusState) {
+        this.minusPlusState = minusPlusState;
+    }
+
+    // use to label
     public String getPrefix() {
         return prefix;
     }
 
+    // unique id for memory
     public String fullAddress() {
         if(getPrefix() == null) return getValue();
 //        if (className != null) return className + "_" + getValue();

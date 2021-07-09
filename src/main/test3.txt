@@ -3,23 +3,23 @@ class Main {
     main() : int {
 
         let y: real;
-        /*
         let x: real;
+        /*
 
-        x <- y + 2.3;
         */
+        x <- 2.9;
         y <- (real) 3;
 
 
         //out_int( (int) (5 + 10.9));
 
-        /*
+
         if (x != y) then
-            out_string("equal");
+            out_string("if");
         else
-            out_string("not equal");
+            out_string("else");
         fi
-        */
+
 
         return 0;
     }

@@ -1,6 +1,6 @@
 package main.codegen.desc;
 
-import sun.security.krb5.internal.crypto.Des;
+import main.model.Descriptor;
 
 public class MinusPlus {
     private Descriptor descriptor;
