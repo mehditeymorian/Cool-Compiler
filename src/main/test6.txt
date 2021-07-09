@@ -1,13 +1,13 @@
 class Main {
 
     main() : int {
-        let a: real;
-        let y: real;
+        let a: int;
+        let y: int;
 
-        a <- 1.0;
-        y <- 2.0;
+        a <- 1;
+        y <- 2;
 
-        a++;
+        out_int( ++a);
 
         y <- (a++ + ((a++ + a) * a++));
 

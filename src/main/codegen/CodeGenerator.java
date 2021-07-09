@@ -296,20 +296,11 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "visit_body":
                 break;
 
-            case "unary_expression":
-                // for expression like  assignment semnaticStack is empty so just skip it
-                if (semanticStack.isEmpty())
-                    return;
-                Descriptor descriptor = semanticStack.pop();
-
-                if (descriptor.getMinusPlusState() == 0)
-                    throw new IllegalArgumentException("Not a statement.");
-
-                setDataType(descriptor);
-                String adr1 = minusPlus(descriptor , null , PRE_MP);
-                adr1 = adr1 == null ? getAddress(descriptor , descriptor.getDataType()) : adr1;
-                minusPlus(descriptor , adr1 , POST_MP);
-                releaseTempRegister(adr1);
+            case "pm_statement":
+                plusMinusExpression(true);
+                break;
+            case "pm_expression":
+                plusMinusExpression(false);
                 break;
             case "any_expr":
 
@@ -476,6 +467,38 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         Scope scope = new ClassScope(null , className);
         classes.add(scope);
         scopeStack.push(scope);
+    }
+
+    private void plusMinusExpression(boolean isStatement) {
+        // for expression like  assignment semantic Stack is empty so just skip it
+        if (semanticStack.isEmpty())
+            return;
+        Descriptor descriptor = semanticStack.pop();
+
+        if (isStatement && descriptor.getMinusPlusState() == 0)
+            throw new IllegalArgumentException("Not a statement.");
+
+        setDataType(descriptor);
+
+        if (!descriptor.getDataType().isNumeric()){
+            semanticStack.push(descriptor);
+            return;
+        }
+
+
+
+        String adr1 = minusPlus(descriptor , null , PRE_MP);
+        adr1 = adr1 == null ? getAddress(descriptor , descriptor.getDataType()) : adr1;
+        minusPlus(descriptor , adr1 , POST_MP);
+        if (isStatement)
+            releaseTempRegister(adr1);
+        else {
+            Descriptor result = new Descriptor(adr1 , null , Descriptor.Type.REGISTER);
+            result.setDataType(descriptor.getDataType());
+            result.setArray(descriptor.isArray());
+            result.setClassName(descriptor.getClassName());
+            semanticStack.push(result);
+        }
     }
 
     public Scope getCurrentScope() {
