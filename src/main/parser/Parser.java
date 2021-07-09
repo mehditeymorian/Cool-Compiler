@@ -51,22 +51,22 @@ public class Parser {
 
     private List<String> recoveryState;
 
-    public Parser(Lexical lexical, CodeGenerator codeGenerator, String nptPath, boolean debugMode) {
+    public Parser(Lexical lexical, CodeGenerator codeGenerator, InputStream nptPath, boolean debugMode) {
         this(lexical, codeGenerator, nptPath);
         this.debugMode = debugMode;
     }
 
-    public Parser(Lexical lexical, CodeGenerator codeGenerator, String nptPath) {
+    public Parser(Lexical lexical, CodeGenerator codeGenerator, InputStream nptPath) {
         this.lexical = lexical;
         this.codeGenerator = codeGenerator;
         this.recoveryState = new ArrayList<>();
 
-        if (!Files.exists(Paths.get(nptPath))) {
-            throw new RuntimeException("Parser table not found: " + nptPath);
-        }
+//        if (!Files.exists(Paths.get(nptPath))) {
+//            throw new RuntimeException("Parser table not found: " + nptPath);
+//        }
 
         try {
-            Scanner in = new Scanner(new FileInputStream(nptPath));
+            Scanner in = new Scanner(nptPath);
             String[] tmpArr = in.nextLine().trim().split(" ");
             int rowSize = Integer.parseInt(tmpArr[0]);
             int colSize = Integer.parseInt(tmpArr[1]);
@@ -100,9 +100,10 @@ public class Parser {
             }
         } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
             throw new RuntimeException("Invalid .npt file.");
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException("Unable to load .npt file.", e);
         }
+//        catch (FileNotFoundException e) {
+//            throw new RuntimeException("Unable to load .npt file.", e);
+//        }
     }
 
     public void parse() {

@@ -52,6 +52,7 @@ public class AssemblyWriter {
             Files.deleteIfExists(path);
             Files.write(path , INSTANCE.codeText , StandardOpenOption.CREATE,StandardOpenOption.WRITE);
             Files.write(path , INSTANCE.memory , StandardOpenOption.APPEND);
+            System.out.printf("Successfully compiled. result: %s\n", path);
         } catch (IOException e) {
             e.printStackTrace();
         }

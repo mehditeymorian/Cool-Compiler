@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="compiler:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/compiler_jar</output-path>
+    <root id="archive" name="CoolCompiler.jar">
+      <element id="module-output" name="CoolCompiler" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../ScannerAntlr/antlr.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
