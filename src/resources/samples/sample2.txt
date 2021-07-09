@@ -1,0 +1,27 @@
+class Main {
+    let a: int;
+    let b: int;
+
+    main() : int {
+        let i: int;
+        let j: int;
+
+        i <- in_int();
+        j <- 3;
+
+        //a <- (++i + j++ * --i);
+        a <- i + j;
+
+        if a > 3 then
+            if b != 10 then
+                b <- 1;
+            else
+                b <- 0;
+            fi
+        else
+            b <- 0;
+        fi
+
+        return 0;
+    }
+}

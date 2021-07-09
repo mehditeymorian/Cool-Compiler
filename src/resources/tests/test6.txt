@@ -1,0 +1,23 @@
+class Main {
+
+    main() : int {
+        let a: int;
+        let y: int;
+
+        a <- 1;
+        y <- 2;
+
+        out_int( ++a);
+
+        y <- (a++ + ((a++ + a) * a++));
+
+        out_string("a is: ");
+        out_int( (int) a);
+        print_line();
+        out_string("y is: ");
+        out_int( (int) y);
+
+
+        return 0;
+    }
+}

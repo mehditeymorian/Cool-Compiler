@@ -1,0 +1,23 @@
+class Main {
+
+    main() : int {
+        let message: string;
+        let condition: bool;
+        let x: int;
+
+        message <- "x is ";
+        condition <- true;
+
+        for (x <- 1; condition; x +=2)
+            out_string(message);
+            out_int(x);
+            print_line();
+            if (x > 20) then
+                condition <- false;
+            fi
+        rof
+
+
+        return 0;
+    }
+}

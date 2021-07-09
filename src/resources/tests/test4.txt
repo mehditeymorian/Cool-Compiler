@@ -1,0 +1,30 @@
+class Main {
+
+    main() : int {
+        let x:int[];
+        let size: int;
+        let i: int;
+        size <- in_int();
+
+        x <- new Array(int,size);
+
+        out_string("second for loop");
+
+        x <- new Array(int, size*2);
+
+        for(i <- 0; i < size*2; i+=1)
+            x[i] <- i + 100;
+        rof
+
+        for(i <- 0; i < size*2; i+=1)
+            out_int(x[i]);
+            print_line();
+        rof
+
+
+
+
+
+        return 0;
+    }
+}

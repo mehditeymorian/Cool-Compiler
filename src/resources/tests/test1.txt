@@ -1,0 +1,18 @@
+class Main {
+    let a: int;
+    let b: int;
+
+    main() : int {
+        let i: int;
+        let j: int;
+        // if an assignment is present assigment in loop take place :) FUCK!
+
+        for( i <- 0; i < 5; i <- i + 1)
+            out_int(i);
+            print_line();
+        rof
+
+
+        return 0;
+    }
+}

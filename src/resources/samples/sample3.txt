@@ -1,0 +1,17 @@
+class Calculator {
+   let a: int;
+   let x: int;
+}
+
+class Main {
+    let a: int;
+    let b: int;
+
+    main() : int {
+        let calc: Calculator;
+
+        calc.a <- 2;
+
+        return 0;
+    }
+}
