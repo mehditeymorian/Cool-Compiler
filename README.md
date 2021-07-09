@@ -17,9 +17,9 @@
 - [x] len function array
 - [x] pre -- ++
 - [x] post -- ++
+- [x] break, continue
 - [ ] len function string
 - [ ] dynamic strings
-- [ ] break, continue
 - [ ] print function for all data types
 - [ ] input function for all data types
 - [ ] function in the class no args no return

@@ -3,6 +3,7 @@ package main.codegen;
 import main.model.Descriptor;
 import main.codegen.writer.AssemblyWriter;
 import main.model.DataType;
+import sun.security.krb5.internal.crypto.Des;
 
 import java.util.Map;
 
@@ -47,28 +48,29 @@ public class Utils {
     public static void setDataType(Descriptor descriptor) {
         if (descriptor.getDataType() != null || descriptor.getType() != Descriptor.Type.VARIABLE)
             return;
+        Descriptor found;
         String fullAddress = descriptor.fullAddress();
         // looking for full address
-        for (Map.Entry<String, Descriptor> each : CodeGenerator.variables.entrySet()) {
-            if (each.getKey().equals(fullAddress)) {
-                descriptor.setDataType(each.getValue().getDataType());
-                descriptor.setClassName(each.getValue().getClassName());
-                descriptor.setArray(each.getValue().isArray());
-                return;
-            }
-        }
-        String[] split = fullAddress.split("_");
-        String classAddress = split[0] + "_" + split[2];
-        for (Map.Entry<String, Descriptor> each : CodeGenerator.variables.entrySet()) {
-            if (each.getKey().equals(classAddress)) {
-                descriptor.setDataType(each.getValue().getDataType());
-                descriptor.setClassName(each.getValue().getClassName());
-                descriptor.setArray(each.getValue().isArray());
-                return;
-            }
+        found = findDescriptor(fullAddress);
+        if (found == null) {
+            String[] split = fullAddress.split("_");
+            String classAddress = split[0] + "_" + split[2];
+            found = findDescriptor(classAddress);
         }
 
-        throw new IllegalArgumentException("variable " + descriptor.getValue() + " not found!");
+        if (found == null)
+            throw new IllegalArgumentException("variable " + descriptor.getValue() + " not found!");
+
+        descriptor.setDataType(found.getDataType());
+        descriptor.setClassName(found.getClassName());
+        descriptor.setArray(found.isArray());
+    }
+
+    public static Descriptor findDescriptor(String key) {
+        for (Map.Entry<String, Descriptor> each : CodeGenerator.variables.entrySet()) {
+            if (each.getKey().equals(key)) return each.getValue();
+        }
+        return null;
     }
 
     public static void equalType(Descriptor first , Descriptor second) {

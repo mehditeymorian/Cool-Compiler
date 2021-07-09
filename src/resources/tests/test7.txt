@@ -1,0 +1,31 @@
+class Main {
+
+    main() : int {
+        let i: int;
+
+        for(i <- 0; true ; i++)
+            if ( (i % 5 == 0) & (i % 3 == 0)) then
+                out_string("XO");
+                print_line();
+                continue;
+            fi
+            if (i % 5 == 0) then
+                out_string("X");
+                print_line();
+                continue;
+            fi
+            if (i % 3 == 0) then
+                out_string("O");
+                print_line();
+                continue;
+            fi
+
+            out_int(i);
+            print_line();
+            if (i == 101) then
+                break;
+            fi
+        rof
+        return 0;
+    }
+}

@@ -53,24 +53,11 @@ public class Assignment {
         }
         String command = getStoreCommand(expressionDesc.getDataType());
         String destination = idDesc.fullAddress();
-        String src = "";
+        String src = getAddress(expressionDesc,expressionDesc.getDataType());
 
         // check type matching
         equalType(idDesc , expressionDesc);
 
-        switch (expressionDesc.getType()) {
-            case LITERAL: // a <- 2;
-                src = getTempRegister(expressionDesc.getDataType());
-                instruction(getLoadImmCommand(expressionDesc.getDataType()) , src , expressionDesc.getValue());
-                break;
-            case REGISTER: // a <- t0;
-                src = expressionDesc.getValue();
-                releaseTempRegister(expressionDesc.getValue());
-                break;
-            case VARIABLE:
-
-                break;
-        }
         instruction(command , src , destination);
     }
 

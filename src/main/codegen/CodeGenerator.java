@@ -24,6 +24,8 @@ public class CodeGenerator implements main.parser.CodeGenerator {
     public static Map<String, Descriptor> variables;
     public static Stack<Descriptor> semanticStack;
     public static Stack<String> labelStack;
+    // top 2 element on stack is loop-label and out-label respectively for the innermost loop
+    public static Stack<String> controlLabelStack;
     private final Stack<String> typeStack;
     private final Stack<Scope> scopeStack;
     private final List<Scope> classes;
@@ -40,6 +42,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         variables = new HashMap<>();
         semanticStack = new Stack<>();
         labelStack = new Stack<>();
+        controlLabelStack = new Stack<>();
         typeStack = new Stack<>();
         scopeStack = new Stack<>();
         tempFloatVariables = new TreeSet<>();
@@ -85,7 +88,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "end_function":
                 break;
             case "push_id":
-                Descriptor item = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.VARIABLE);
+                Descriptor item = new Descriptor(currentSymbol.getValue() , getPrefix(currentSymbol.getValue()) , Descriptor.Type.VARIABLE);
                 if (minusPlusFlag != 0) {
                     item.setMinusPlusState(minusPlusFlag);
                     minusPlusFlag = 0;
@@ -105,29 +108,28 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 typeStack.push(currentSymbol.getValue());
                 break;
             case "push_string":
-                Descriptor stringLiteral = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.LITERAL);
+                Descriptor stringLiteral = new Descriptor(currentSymbol.getValue() , getPrefix(null) , Descriptor.Type.LITERAL);
                 stringLiteral.setDataType(DataType.STRING);
                 semanticStack.push(stringLiteral);
                 break;
             case "push_real":
-                Descriptor realLiteral = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.LITERAL);
+                Descriptor realLiteral = new Descriptor(currentSymbol.getValue() , getPrefix(null) , Descriptor.Type.LITERAL);
                 realLiteral.setDataType(DataType.REAL);
                 semanticStack.push(realLiteral);
                 break;
             case "push_icv":
-                Descriptor icv = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.LITERAL);
+                Descriptor icv = new Descriptor(currentSymbol.getValue() , getPrefix(null) , Descriptor.Type.LITERAL);
                 icv.setDataType(DataType.INT);
                 semanticStack.push(icv);
                 break;
             case "push_bool":
-                System.out.println(currentSymbol.getValue());
                 String boolValue = currentSymbol.getValue().equals("true") ? "1" : "0";
-                Descriptor boolLiteral = new Descriptor(boolValue , getPrefix() , Descriptor.Type.LITERAL);
+                Descriptor boolLiteral = new Descriptor(boolValue , getPrefix(null) , Descriptor.Type.LITERAL);
                 boolLiteral.setDataType(DataType.BOOL);
                 semanticStack.push(boolLiteral);
                 break;
             case "push_void":
-                Descriptor voidLiteral = new Descriptor(currentSymbol.getValue() , getPrefix() , Descriptor.Type.LITERAL);
+                Descriptor voidLiteral = new Descriptor(currentSymbol.getValue() , getPrefix(null) , Descriptor.Type.LITERAL);
                 voidLiteral.setDataType(DataType.VOID);
                 semanticStack.push(voidLiteral);
                 break;
@@ -212,13 +214,18 @@ public class CodeGenerator implements main.parser.CodeGenerator {
 
 
             case "cjz":
+                // pop 2 element from top, refer to explanation in top to figure out why :)
+                controlLabelStack.pop();
+                controlLabelStack.pop();
+                // no break so it will do cjz_if too. it's correct don't worry :)
+            case "cjz_if":
                 // out label
                 AssemblyWriter.label(labelStack.pop());
                 break;
             case "jp":
                 String jzLabel = labelStack.pop();
 
-                String label2 = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
+                String label2 = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix(null));
                 labelStack.push(label2);
                 AssemblyWriter.instruction("b" , label2);
 
@@ -239,21 +246,37 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 break;
             case "jz":
                 jz();
-
-                String bodyLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
+                controlLabelStack.push(labelStack.peek());
+                String bodyLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix(null));
                 labelStack.push(bodyLabel);
                 AssemblyWriter.instruction("b" , bodyLabel);
-                String statementLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
+                String statementLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix(null));
                 labelStack.push(statementLabel);
                 AssemblyWriter.label(statementLabel);
+                // in for loop continue statement cause loop to move to 3rd statement
+                controlLabelStack.push(statementLabel);
                 break;
             case "jz_while":
                 jz();
+                // add out label
+                // in while loop continue cause loop to move before condition
+                // for loop it add out label and then loop label
+                // while loop it add loop label first then out label.
+                // to harmonize them together change the order of control labels for while
+                String cL1 = controlLabelStack.pop();
+                controlLabelStack.push(labelStack.peek());
+                controlLabelStack.push(cL1);
+                break;
+            case "jz_if":
+                jz();
+                break;
+            case "cjb_while":
+                cjb();
+                // add loop label
+                controlLabelStack.push(labelStack.peek());
                 break;
             case "cjb":
-                String conditionLabel = LabelGenerator.label(LabelGenerator.Type.LOOP , getPrefix());
-                labelStack.push(conditionLabel);
-                AssemblyWriter.label(conditionLabel);
+                cjb();
                 break;
             case "visit_loop_body":
                 String l1 = labelStack.pop();
@@ -268,13 +291,27 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "load_return":
                 break;
             case "continue_statement":
+                String loopL1 = controlLabelStack.pop();
+                String outL1 = controlLabelStack.pop();
+                AssemblyWriter.instructionC("continue statement" , "b" , loopL1);
+                controlLabelStack.push(outL1);
+                controlLabelStack.push(loopL1);
                 break;
             case "return_statement":
                 break;
             case "break_statement":
+                String loopL2 = controlLabelStack.pop();
+                AssemblyWriter.instructionC("break statement" , "b" , controlLabelStack.peek());
+                controlLabelStack.push(loopL2);
                 break;
 
 
+            case "pm_statement":
+                plusMinusExpression(true);
+                break;
+            case "pm_expression":
+                plusMinusExpression(false);
+                break;
             case "pre_plus_plus":
                 minusPlusFlag = PRE_MP * PLUS;
                 break;
@@ -295,12 +332,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "visit_body":
                 break;
 
-            case "pm_statement":
-                plusMinusExpression(true);
-                break;
-            case "pm_expression":
-                plusMinusExpression(false);
-                break;
+
             case "any_expr":
 
                 break;
@@ -319,8 +351,14 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         }
     }
 
+    private void cjb() {
+        String loopLabel = LabelGenerator.label(LabelGenerator.Type.LOOP , getPrefix(null));
+        labelStack.push(loopLabel);
+        AssemblyWriter.label(loopLabel);
+    }
+
     private void jz() {
-        String outLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
+        String outLabel = LabelGenerator.label(LabelGenerator.Type.OUT , getPrefix(null));
         labelStack.push(outLabel);
 
         Descriptor descriptor = semanticStack.pop();
@@ -477,13 +515,17 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         if (isStatement && descriptor.getMinusPlusState() == 0)
             throw new IllegalArgumentException("Not a statement.");
 
-        setDataType(descriptor);
-
-        if (!descriptor.getDataType().isNumeric()){
+        if (descriptor.getMinusPlusState() == 0){
             semanticStack.push(descriptor);
             return;
         }
 
+        setDataType(descriptor);
+
+        if (!descriptor.getDataType().isNumeric()) {
+            semanticStack.push(descriptor);
+            return;
+        }
 
 
         String adr1 = minusPlus(descriptor , null , PRE_MP);
@@ -504,8 +546,15 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         return scopeStack.isEmpty() ? null : scopeStack.peek();
     }
 
-    public String getPrefix() {
+    public String getPrefix(String name) {
         String className = classes.size() == 0 ? "" : classes.get(classes.size() - 1).getName();
+
+        if (name != null) {
+            Descriptor found = findDescriptor(className + "_" + name);
+            if (found != null)
+                return className;
+        }
+
         Scope currentScope = getCurrentScope();
         String functionName = currentScope == null ? "" : currentScope.getName();
 
