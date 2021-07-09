@@ -61,9 +61,6 @@ public class Parser {
         this.codeGenerator = codeGenerator;
         this.recoveryState = new ArrayList<>();
 
-//        if (!Files.exists(Paths.get(nptPath))) {
-//            throw new RuntimeException("Parser table not found: " + nptPath);
-//        }
 
         try {
             Scanner in = new Scanner(nptPath);
@@ -101,9 +98,6 @@ public class Parser {
         } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
             throw new RuntimeException("Invalid .npt file.");
         }
-//        catch (FileNotFoundException e) {
-//            throw new RuntimeException("Unable to load .npt file.", e);
-//        }
     }
 
     public void parse() {

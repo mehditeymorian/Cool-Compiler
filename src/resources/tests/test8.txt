@@ -1,0 +1,31 @@
+class Main {
+
+    main() : int {
+        let i: int;
+        let j: int;
+
+        for(i <- 0; true ; i++)
+          out_int(i);
+          j <- 0;
+          while (true) loop
+
+            if (j == 3) then
+                j++;
+                continue;
+            fi
+            if (j == 5) then
+                break;
+            fi
+            out_int(j);
+            out_string(" ");
+            j++;
+          pool
+          print_line();
+
+          if (i == 5) then
+            break;
+           fi
+        rof
+        return 0;
+    }
+}

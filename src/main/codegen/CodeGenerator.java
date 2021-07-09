@@ -24,6 +24,8 @@ public class CodeGenerator implements main.parser.CodeGenerator {
     public static Map<String, Descriptor> variables;
     public static Stack<Descriptor> semanticStack;
     public static Stack<String> labelStack;
+    // top 2 element on stack is loop-label and out-label respectively for the innermost loop
+    public static Stack<String> controlLabelStack;
     private final Stack<String> typeStack;
     private final Stack<Scope> scopeStack;
     private final List<Scope> classes;
@@ -40,6 +42,7 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         variables = new HashMap<>();
         semanticStack = new Stack<>();
         labelStack = new Stack<>();
+        controlLabelStack = new Stack<>();
         typeStack = new Stack<>();
         scopeStack = new Stack<>();
         tempFloatVariables = new TreeSet<>();
@@ -212,6 +215,11 @@ public class CodeGenerator implements main.parser.CodeGenerator {
 
 
             case "cjz":
+                // pop 2 element from top, refer to explanation in top to figure out why :)
+                controlLabelStack.pop();
+                controlLabelStack.pop();
+                // no break so it will do cjz_if too. it's correct don't worry :)
+            case "cjz_if":
                 // out label
                 AssemblyWriter.label(labelStack.pop());
                 break;
@@ -239,21 +247,37 @@ public class CodeGenerator implements main.parser.CodeGenerator {
                 break;
             case "jz":
                 jz();
-
+                controlLabelStack.push(labelStack.peek());
                 String bodyLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
                 labelStack.push(bodyLabel);
                 AssemblyWriter.instruction("b" , bodyLabel);
                 String statementLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
                 labelStack.push(statementLabel);
                 AssemblyWriter.label(statementLabel);
+                // in for loop continue statement cause loop to move to 3rd statement
+                controlLabelStack.push(statementLabel);
                 break;
             case "jz_while":
                 jz();
+                // add out label
+                // in while loop continue cause loop to move before condition
+                // for loop it add out label and then loop label
+                // while loop it add loop label first then out label.
+                // to harmonize them together change the order of control labels for while
+                String cL1 = controlLabelStack.pop();
+                controlLabelStack.push(labelStack.peek());
+                controlLabelStack.push(cL1);
+                break;
+            case "jz_if":
+                jz();
+                break;
+            case "cjb_while":
+                cjb();
+                // add loop label
+                controlLabelStack.push(labelStack.peek());
                 break;
             case "cjb":
-                String conditionLabel = LabelGenerator.label(LabelGenerator.Type.LOOP , getPrefix());
-                labelStack.push(conditionLabel);
-                AssemblyWriter.label(conditionLabel);
+                cjb();
                 break;
             case "visit_loop_body":
                 String l1 = labelStack.pop();
@@ -268,10 +292,18 @@ public class CodeGenerator implements main.parser.CodeGenerator {
             case "load_return":
                 break;
             case "continue_statement":
+                String loopL1 = controlLabelStack.pop();
+                String outL1 = controlLabelStack.pop();
+                AssemblyWriter.instructionC("continue statement","b",loopL1);
+                controlLabelStack.push(outL1);
+                controlLabelStack.push(loopL1);
                 break;
             case "return_statement":
                 break;
             case "break_statement":
+                String loopL2 = controlLabelStack.pop();
+                AssemblyWriter.instructionC("break statement","b",controlLabelStack.peek());
+                controlLabelStack.push(loopL2);
                 break;
 
 
@@ -319,8 +351,14 @@ public class CodeGenerator implements main.parser.CodeGenerator {
         }
     }
 
+    private void cjb() {
+        String loopLabel = LabelGenerator.label(LabelGenerator.Type.LOOP , getPrefix());
+        labelStack.push(loopLabel);
+        AssemblyWriter.label(loopLabel);
+    }
+
     private void jz() {
-        String outLabel = LabelGenerator.label(LabelGenerator.Type.JUMP , getPrefix());
+        String outLabel = LabelGenerator.label(LabelGenerator.Type.OUT , getPrefix());
         labelStack.push(outLabel);
 
         Descriptor descriptor = semanticStack.pop();
