@@ -1,0 +1,56 @@
+// Test Of Arrays, Conditions, Loops
+class Main {
+    main () : int {
+        // Arrays
+        let arr1: int[];
+        arr1 <- new Array(int, 10);
+        arr1[0] <- 3;
+        arr1[5] <- 6;
+        out_int(arr1[5]);
+        out_int(arr1[0]);
+
+        // Bonus of Arrays
+        // out_int(len(arr1));
+
+        // Conditions
+        let a: int;
+        let b: int;
+        a <- 2;
+        b <- -1;
+        if a > b then
+            out_int(a); // 2
+        else
+            out_int(b);
+        fi
+
+        if 1 > 2 || 2 < 3 then
+            out_string("or check"); // should be printed
+        fi
+
+        if 1 > 2 && 2 < 3 then
+            out_string("and check"); // should not be printed
+        fi
+
+        // For and Continue
+        let i: int;
+        for (i <- 0; i <= 4; i <- i + 1)
+            if i == 0 then
+                continue;
+            fi
+            out_int(i);
+        rof
+
+        // While and break
+        while (i >= -1) loop
+            out_int(i);
+            print
+            i <- i - 1;
+            if i == 0 then
+                out_string("in break");
+                break;
+            fi
+        pool
+
+        return 0;
+    }
+}

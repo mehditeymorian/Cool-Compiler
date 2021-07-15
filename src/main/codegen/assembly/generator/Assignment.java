@@ -43,6 +43,7 @@ public class Assignment {
 
     public static void idAssign(Descriptor idDesc , Descriptor expressionDesc) {
         setDataType(idDesc);
+        setDataType(expressionDesc);
         if (idDesc.isArray()) {
             Array.create(idDesc , expressionDesc);
             return;
@@ -56,7 +57,7 @@ public class Assignment {
         String src = getAddress(expressionDesc,expressionDesc.getDataType());
 
         // check type matching
-        equalType(idDesc , expressionDesc);
+        //equalType(idDesc , expressionDesc);
 
         instruction(command , src , destination);
     }

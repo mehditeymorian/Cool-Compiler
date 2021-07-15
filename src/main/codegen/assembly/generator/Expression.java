@@ -90,7 +90,7 @@ public class Expression {
                 arithmetic(left , right , operator , resultType);
                 break;
             case "div":
-                operator = resultType == DataType.REAL ? "div" + FLOAT_PRECISION : "di";
+                operator = resultType == DataType.REAL ? "div" + FLOAT_PRECISION : "div";
                 arithmetic(left , right , operator , resultType);
                 break;
             case "mod":

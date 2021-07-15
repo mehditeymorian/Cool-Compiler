@@ -1,0 +1,73 @@
+// Test Of Methods and Class
+class Helper { 
+    let i : int;
+    let j : int;
+    let n : int;
+    let counter: int;
+
+    bubbleSort (items : int[]) : int [] {
+        n <- len(items);
+        for (i <- 0; i < n-1; i <- i+1)
+            for (j <- 0; j < n-i-1; j <- j+1)
+                if items[j] > items[j+1] then
+                    let t : int;
+                    t <- items[j];
+                    items[j] <- items[j+1];
+                    items[j+1] <- t;
+                fi
+            rof 
+        rof 
+        return items; 
+    } 
+
+    add(a: int, b: int) : int {
+        return a + b;
+    }
+}
+
+class Main {
+    let items : int[];
+    printArray () : int {
+        let i : int;
+        out_string ("sorted list:");
+        for (i <- 0; i < 5; i <- i + 1)
+            out_int(items [i]); 
+        rof 
+        return 0;
+    }
+
+    increment (a: int) : int {
+        return a + 1;
+    }
+
+    main () : int {
+        let i : int;
+        let j : int;
+        let rawItems : int[];
+        rawItems <- new Array(int, 5);
+        for (i <- 0; i < 5; i <- i+1)
+            let x : int;
+            x <- in_int();
+            if x == -1 then
+                break;
+            else rawItems[i] <- x;
+            fi
+        rof
+
+        let incrementResult : int;
+        incrementResult <- increment(4);
+        out_int(incrementResult); // 5
+
+        let s : Helper;
+        let resultOfAdd : int;
+        resultOfAdd <- s.add(1, 2); // 3
+        out_int(resultOfAdd);
+
+        s.counter <- 0; // Access Class Variable
+
+        items <- s.bubbleSort(rawItems);
+        let notImportantReturnValue : int;
+        notImportantReturnValue <- printArray();
+        return 0;
+    } 
+} 

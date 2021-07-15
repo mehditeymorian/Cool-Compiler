@@ -1,0 +1,59 @@
+// Test Of Expressions
+class Main {
+    main () : int {
+    let num3: int;
+
+    /*
+
+        // Arithmetic
+        let num1: int;
+        let num2: int;
+
+        num1 <- 3 + 4 * 3;
+        num2 <- num1 / 5;
+        num3 <- 1 + (num2 - num1) * 2;
+        out_int(num3); // -23
+
+        */
+        ++num3;
+        out_int(num3); // -22
+        let num4: int;
+        num4 <- (num3 + 32) % 6;
+        out_int(num4); // 4
+        let bool1: bool;
+        let real1: real;
+        real1 <- 2.45;
+        bool1 <- true;
+
+        print_line();
+        // Bonus Of Arithmetic
+        num3++;
+        out_int(num3); // -21
+        print_line();
+
+        // Cast
+        let realToIntVar: int;
+        realToIntVar <- (int) real1;
+        out_int(realToIntVar); // 2
+        print_line();
+        // Bonus Of Cast
+        let implicitRealToIntVar : int;
+        implicitRealToIntVar <- real1;
+        out_int(implicitRealToIntVar);
+
+        // Other Types of Bonus cast can be implemented
+        // Like String to int, ...
+
+        // Bitwise Expressions
+        let bitwise1: int;
+        let bitwise2: int;
+        let num5 : int;
+        num5 <- 5;
+        bitwise1 <- num5 & 3;
+        bitwise2 <- num5 | 3;
+        out_int(bitwise1); // 1
+        out_int(bitwise2); // 7
+
+        return 0;
+    }
+}

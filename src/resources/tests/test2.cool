@@ -1,0 +1,24 @@
+// Test Of Input Output and strings
+class Main {
+    main () : int {
+        // Input Output
+        let int_num: int;
+        int_num <- in_int();
+        out_int(int_num);
+
+        let str: string;
+        str <- in_string();
+        out_string(str);
+
+        // Handling Strings
+        let str2 : string;
+        str2 <- str;
+        out_string(str2);
+        str <- "An Str";
+        out_string(str);
+        out_string("Tab\t");
+        // Bonus
+        // out_int(len(str)); // 6
+        return 0;
+    }
+}

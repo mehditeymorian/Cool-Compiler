@@ -1,0 +1,25 @@
+// This test has Errors
+class Main {
+    main () : int {
+        // Parser Error
+        //let b : int
+
+        // An Error
+        // tel c : int;
+
+        // Logical Error1
+        // let a: int;
+        // a <- 2;
+        // let a: int;
+
+        // Logical Error2
+        let arr: int[];
+        arr[0] <- 1;
+        out_int(arr[0]);
+
+        // Bonus Types of Errors (printing line of error, print lines of unreachable code, etc...)
+        // ...
+
+        return 0;
+    }
+}

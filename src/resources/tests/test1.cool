@@ -1,0 +1,7 @@
+// Just For Test Running
+class Main {
+    let a: int;
+    main () : int {
+        return 0;
+    }
+}
