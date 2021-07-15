@@ -2,10 +2,13 @@
 I wrote this project for Compiler course at Shahid Beheshti University Summer 2021.
 Java, [PGen](https://github.com/Borjianamin98/PGen), [ANTLR](https://github.com/antlr/antlr4) are the tools that
 I've leveraged to do this project. list of features is at the end of this document;
-It shows the current features of the compiler, and the features that need to be done.
+It shows the current features of the compiler, and the features that need to be done. The syntax is fairly simple. here's a sample:
+
+
+![Syntax](https://github.com/mehditeymorian/Cool-Compiler/blob/master/images/syntax.png)
 
 ## How to Compiler
-In Releases section, you can find the latest exe, jar, and probably bash scripts to compile.
+In [Releases](https://github.com/mehditeymorian/Cool-Compiler/releases) section, you can find the latest exe, jar, and probably bash scripts to compile.
 
 ## Feature List
 - [x] Binary Expression
