@@ -1,7 +1,13 @@
+# Cool Compiler (CC)
+I wrote this project for Compiler course at Shahid Beheshti University Summer 2021.
+Java, [PGen](https://github.com/Borjianamin98/PGen), [ANTLR](https://github.com/antlr/antlr4) are the tools that
+I've leveraged to do this project. list of features is at the end of this document;
+It shows the current features of the compiler, and the features that need to be done.
 
+## How to Compiler
+In Releases section, you can find the latest exe, jar, and probably bash scripts to compile.
 
-
-# Check List
+## Feature List
 - [x] Binary Expression
 - [x] Unary Expression
 - [x] Comparators
